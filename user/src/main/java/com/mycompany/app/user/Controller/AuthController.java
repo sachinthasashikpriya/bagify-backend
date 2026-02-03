@@ -9,6 +9,7 @@ import com.mycompany.app.user.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -19,15 +20,14 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> register(@RequestBody @Valid  RegisterRequest registerRequest) {
         User user = userService.register(registerRequest);
         return ResponseEntity.ok(user);
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
-        User user = userService.authenticate(loginRequest);
-        String token = jwtUtil.generateToken(user);
-        return ResponseEntity.ok(new AuthResponse(token));
+        AuthResponse authResponse = userService.authenticate(loginRequest);
+        return ResponseEntity.ok(authResponse);
     }
 
 }
