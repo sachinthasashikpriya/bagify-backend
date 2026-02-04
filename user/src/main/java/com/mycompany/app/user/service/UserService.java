@@ -29,9 +29,10 @@ public class UserService {
         !registerRequest.getPassword().equals(registerRequest.getConfirmPassword())){
             throw new IllegalArgumentException("Passwords do not match");
         }
+        System.out.println("UserType: " + registerRequest.getUserrole());
 
 
-        Role role = switch (registerRequest.getUserType().toLowerCase()){
+        Role role = switch (registerRequest.getUserrole().toLowerCase()){
             case "buyer" -> Role.BUYER;
             case "seller" -> Role.SELLER;
             default -> throw new IllegalArgumentException("Invalid user type");
@@ -45,6 +46,8 @@ public class UserService {
         user.setAddress(registerRequest.getAddress());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setRole(role);
+
+
 
         return userRepository.save(user);
     }

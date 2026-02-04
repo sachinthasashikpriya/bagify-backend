@@ -34,7 +34,7 @@ public class  RegisterRequest {
             flags = Pattern.Flag.CASE_INSENSITIVE,
             message = "userType must be 'buyer' or 'seller'"
     )
-    private String userType;
+    private String userrole;
 
 
     @AssertTrue(message = "Passwords do not match")
