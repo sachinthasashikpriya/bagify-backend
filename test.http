@@ -1,0 +1,13 @@
+PUT http://localhost:8085/users/profile
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZXdlbWFpbEBleGFtcGxlLmNvbSIsInVzZXJJZCI6OCwicm9sZSI6IlNFTExFUiIsImlhdCI6MTc3NjkyODA3NiwiZXhwIjoxNzc3MDE0NDc2fQ.Se9F-Y0U6ta2zahD6EdYYd0N2AALijKdAGq-lgSzssE
+
+{
+  "name": "sachintha4",
+  "phone": "0771234567",
+  "address": "Colombo, Sri Lanka",
+  "email": "sachintha4@gmail.com",
+  "profileImageUrl": "https://example.com/profile.jpg",
+  "password": "123456",
+  "confirmPassword": "123456"
+}
