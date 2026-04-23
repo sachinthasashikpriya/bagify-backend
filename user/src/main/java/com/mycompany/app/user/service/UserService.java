@@ -1,7 +1,10 @@
 package com.mycompany.app.user.service;
 
+import com.mycompany.app.user.Exception.ResourceNotFoundException;
 import com.mycompany.app.user.dto.*;
+import com.mycompany.app.user.entity.Buyer;
 import com.mycompany.app.user.entity.Role;
+import com.mycompany.app.user.entity.Seller;
 import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.repository.UserRepository;
 import com.mycompany.app.user.util.JwtUtil;
@@ -9,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @Service
@@ -38,30 +42,33 @@ public class UserService {
             default -> throw new IllegalArgumentException("Invalid user type");
         };
 
+        if(role == Role.BUYER){
 
-        User user = new User();
-        user.setName(registerRequest.getName());
-        user.setEmail(registerRequest.getEmail());
-        user.setPhone(registerRequest.getPhone());
-        user.setAddress(registerRequest.getAddress());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole(role);
+            Buyer buyer = new Buyer();
+            buyer.setName(registerRequest.getName());
+            buyer.setEmail(registerRequest.getEmail());
+            buyer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+            buyer.setRole(role);
 
+            return userRepository.save(buyer);
+        }
 
+        if(role == Role.SELLER){
 
-        return userRepository.save(user);
+            Seller seller = new Seller();
+            seller.setName(registerRequest.getName());
+            seller.setEmail(registerRequest.getEmail());
+            seller.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+            seller.setRole(role);
+
+            return userRepository.save(seller);
+        }
+
+        throw new IllegalArgumentException("Invalid role");
     }
 
-//    public User authenticate(LoginRequest loginRequest) {
-//        User user = userRepository.findByEmail(loginRequest.getEmail())
-//                .orElseThrow(() -> new RuntimeException("Invalid username"));
-//
-//        if(!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-//            throw new RuntimeException("Invalid password");
-//        }
-//
-//        return user;
-//    }
+
+
     public AuthResponse authenticate(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email"));
@@ -96,15 +103,54 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User updateProfile(String email, UpdateUserRequest updateUserRequest) {
-        User user = getByEmail(email);
+    // ✅ Correct — use userId from JWT for fast lookup
+    public User updateProfile(Integer userId, String currentEmail, UpdateUserRequest request) throws AccessDeniedException {
 
-        if(updateUserRequest.getName() != null) {
-            user.setName(updateUserRequest.getName());
+        User user = userRepository.findById(userId)  // ✅ fast primary key lookup
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // ✅ Extra security — verify the userId actually belongs to this email
+        // Prevents any mismatch or token manipulation edge cases
+        if (!user.getEmail().equalsIgnoreCase(currentEmail)) {
+            throw new AccessDeniedException("Token identity mismatch");
         }
 
-        if(updateUserRequest.getPassword() != null && !updateUserRequest.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(updateUserRequest.getPassword()));
+        // Update name
+        if (request.getName() != null && !request.getName().isBlank()) {
+            user.setName(request.getName());
+        }
+
+        // Update phone
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone());
+        }
+
+        // Update address
+        if (request.getAddress() != null && !request.getAddress().isBlank()) {
+            user.setAddress(request.getAddress());
+        }
+
+        // Update email
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            if (!request.getEmail().equalsIgnoreCase(currentEmail)) {
+                if (userRepository.existsByEmail(request.getEmail())) {
+                    throw new IllegalArgumentException("Email is already in use");
+                }
+                user.setEmail(request.getEmail());
+            }
+        }
+
+        // Update profile image
+        if (request.getProfileImageUrl() != null && !request.getProfileImageUrl().isBlank()) {
+            user.setProfileImageUrl(request.getProfileImageUrl());
+        }
+
+        // Update password
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            if (!request.getPassword().equals(request.getConfirmPassword())) {
+                throw new IllegalArgumentException("Passwords do not match");
+            }
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         return userRepository.save(user);

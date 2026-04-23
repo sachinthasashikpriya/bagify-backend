@@ -5,14 +5,18 @@ import com.mycompany.app.user.dto.RegisterRequest;
 import com.mycompany.app.user.dto.UpdateUserRequest;
 import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.service.UserService;
+import com.mycompany.app.user.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @RestController
@@ -30,14 +34,17 @@ public class UserController {
     }
 
 
-    //update logging user profile
-    @PutMapping("/me")
-    public ResponseEntity<User> updateMyProfile(
+    @PutMapping("/profile")
+    public ResponseEntity<User> updateProfile(
             Authentication authentication,
             @RequestBody UpdateUserRequest request
-    ) {
-        String email = authentication.getName();
-        return ResponseEntity.ok(userService.updateProfile(email, request));
+    ) throws AccessDeniedException {
+
+        String  currentEmail = authentication.getName(); // ✅ from principal
+        Integer userId       = (Integer) ((UsernamePasswordAuthenticationToken)
+                authentication).getDetails(); // ✅ from details
+
+        return ResponseEntity.ok(userService.updateProfile(userId, currentEmail, request));
     }
 
     //Admin: get all users

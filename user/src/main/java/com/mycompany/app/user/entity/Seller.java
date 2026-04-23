@@ -16,4 +16,9 @@ public class Seller extends User {
     private Integer itemsSold;
     private BigDecimal revenue;
     private Float rating;
+    private String businessName;
+    private String registrationNumber;
+    private String NICNumber;
+    private String nicImageUrl;
+    private String brCertificateUrl;
 }
