@@ -60,4 +60,14 @@ public class UserController {
         return ResponseEntity.ok("User disabled successfully");
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(
+            Authentication authentication,
+            @RequestBody UpdateUserRequest request
+    ) {
+        Integer userId = (Integer) ((UsernamePasswordAuthenticationToken) authentication).getDetails();
+        userService.changePassword(userId, request);
+        return ResponseEntity.ok("Password changed successfully");
+    }
+
 }

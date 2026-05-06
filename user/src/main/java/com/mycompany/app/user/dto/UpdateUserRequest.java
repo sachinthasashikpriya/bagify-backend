@@ -9,6 +9,7 @@ public class UpdateUserRequest {
     private String phone;
     private String address;
     private String ProfileImageUrl;
+    private String currentPassword;
     private String password;
     private String confirmPassword;
 }

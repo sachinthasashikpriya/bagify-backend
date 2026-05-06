@@ -163,4 +163,31 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void changePassword(Integer userId, UpdateUserRequest request) {
+        // 1. Basic validation
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new IllegalArgumentException("New password is required");
+        }
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+        if (request.getPassword().length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters");
+        }
+
+        // 2. Fetch user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // 3. Verify current password
+        if (request.getCurrentPassword() == null ||
+            !passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        // 4. Update and save
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+    }
+
 }
