@@ -45,6 +45,12 @@ public class User {
 
     @Column(nullable = false)
     private boolean enabled = true;
+
+    @Column
+    private String passwordResetToken;
+
+    @Column
+    private java.time.LocalDateTime passwordResetTokenExpiry;
 }
 
 

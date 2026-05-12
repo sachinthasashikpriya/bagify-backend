@@ -21,6 +21,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
 
     public User register(RegisterRequest registerRequest) {
 
@@ -190,4 +191,38 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElse(null);
+
+        if (user != null) {
+            String token = java.util.UUID.randomUUID().toString();
+            user.setPasswordResetToken(token);
+            user.setPasswordResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
+            userRepository.save(user);
+
+            // In a real app, the base URL should be in properties
+            String resetLink = "http://localhost:5173/reset-password?token=" + token;
+            emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
+        }
+        // Silently succeed even if user not found to prevent enumeration
+    }
+
+    public void resetPassword(ResetPasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+
+        User user = userRepository.findByPasswordResetToken(request.getToken())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token"));
+
+        if (user.getPasswordResetTokenExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new IllegalArgumentException("Token has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiry(null);
+        userRepository.save(user);
+    }
 }
