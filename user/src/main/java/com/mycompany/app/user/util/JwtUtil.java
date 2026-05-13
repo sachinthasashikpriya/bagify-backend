@@ -28,7 +28,18 @@ public class JwtUtil {
                 .claim("userId", user.getId())
                 .claim("role", user.getRole() != null ? user.getRole().name() : null)
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now + 86_400_000L))                   // 24 hours
+                .setExpiration(new Date(now + 60_000L))                   // 60 seconds (for testing)
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateRefreshToken(User user) {
+        long now = System.currentTimeMillis();
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .claim("userId", user.getId())
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(now + 604_800_000L))                // 7 days
                 .signWith(key)
                 .compact();
     }

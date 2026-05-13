@@ -79,8 +79,30 @@ public class UserService {
         }
 
         String token = jwtUtil.generateToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
 
-        return new AuthResponse(token, user);
+        return new AuthResponse(token, refreshToken, user);
+    }
+
+    public AuthResponse refreshToken(TokenRefreshRequest request) {
+        String refreshToken = request.getRefreshToken();
+        String email = JwtUtil.extractEmail(refreshToken);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!jwtUtil.isTokenValid(refreshToken, user.getEmail())) {
+            throw new RuntimeException("Invalid or expired refresh token");
+        }
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("User account is disabled");
+        }
+
+        String newToken = jwtUtil.generateToken(user);
+        String newRefreshToken = jwtUtil.generateRefreshToken(user);
+
+        return new AuthResponse(newToken, newRefreshToken, user);
     }
 
     public UserProfileResponse getProfileByEmail(String email) {

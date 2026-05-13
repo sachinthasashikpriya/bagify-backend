@@ -5,6 +5,7 @@ import com.mycompany.app.user.dto.ForgotPasswordRequest;
 import com.mycompany.app.user.dto.LoginRequest;
 import com.mycompany.app.user.dto.RegisterRequest;
 import com.mycompany.app.user.dto.ResetPasswordRequest;
+import com.mycompany.app.user.dto.TokenRefreshRequest;
 import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.service.UserService;
 import com.mycompany.app.user.util.JwtUtil;
@@ -29,6 +30,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
         AuthResponse authResponse = userService.authenticate(loginRequest);
+        return ResponseEntity.ok(authResponse);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody TokenRefreshRequest refreshRequest) {
+        AuthResponse authResponse = userService.refreshToken(refreshRequest);
         return ResponseEntity.ok(authResponse);
     }
 
