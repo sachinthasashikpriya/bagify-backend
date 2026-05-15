@@ -10,8 +10,23 @@ public class UpdateUserRequest {
     private String phone;
     private String address;
     
-    @JsonProperty("profileImageUrl")
     private String profileImageUrl;
+
+    private boolean profileImageUrlSet = false;
+
+    @JsonProperty("profileImageUrl")
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+        this.profileImageUrlSet = true;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public boolean isProfileImageUrlSet() {
+        return profileImageUrlSet;
+    }
 
     private String currentPassword;
     private String password;

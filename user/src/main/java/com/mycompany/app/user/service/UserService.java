@@ -86,7 +86,7 @@ public class UserService {
 
     public AuthResponse refreshToken(TokenRefreshRequest request) {
         String refreshToken = request.getRefreshToken();
-        String email = JwtUtil.extractEmail(refreshToken);
+        String email = jwtUtil.extractEmail(refreshToken);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -168,8 +168,9 @@ public class UserService {
         }
 
         // Update profile image
-        if (request.getProfileImageUrl() != null && !request.getProfileImageUrl().isBlank()) {
-            user.setProfileImageUrl(request.getProfileImageUrl());
+        if (request.isProfileImageUrlSet()) {
+            String newUrl = request.getProfileImageUrl();
+            user.setProfileImageUrl((newUrl == null || newUrl.isBlank()) ? null : newUrl);
         }
 
         // Update password
