@@ -113,7 +113,11 @@ public class UserService {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getRole().name()
+                user.getPhone(),
+                user.getAddress(),
+                user.getRole().name(),
+                user.getProfileImageUrl(),
+                user.getCreatedAt()
         );
     }
 

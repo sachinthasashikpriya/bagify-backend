@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -47,11 +50,14 @@ public class User {
     private boolean enabled = true;
 
     @Column
+    @JsonIgnore
     private String passwordResetToken;
 
     @Column
-    private java.time.LocalDateTime passwordResetTokenExpiry;
+    @JsonIgnore
+    private LocalDateTime passwordResetTokenExpiry;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 }
-
-
-
