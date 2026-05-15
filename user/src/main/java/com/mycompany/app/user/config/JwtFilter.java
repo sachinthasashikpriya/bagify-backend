@@ -17,6 +17,12 @@ import java.util.List;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
+    private final JwtUtil jwtUtil;
+
+    public JwtFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -25,7 +31,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // No token → pass through (public endpoints will work, secured ones will be rejected)
+        // No token → pass through (public endpoints permitted, secured ones will be rejected by Spring Security)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -34,8 +40,8 @@ public class JwtFilter extends OncePerRequestFilter {
         String jwt = authHeader.substring(7);
 
         try {
-            String  email  = JwtUtil.extractEmail(jwt);
-            Integer userId = JwtUtil.extractUserId(jwt);
+            String  email  = jwtUtil.extractEmail(jwt);
+            Integer userId = jwtUtil.extractUserId(jwt);
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
@@ -49,7 +55,15 @@ public class JwtFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
         } catch (Exception e) {
-            SecurityContextHolder.clearContext(); // invalid/expired token
+            // ✅ FIX: Token is present but invalid/expired → respond with 401 immediately.
+            // Previously the filter silently cleared the context and fell through, causing
+            // Spring Security to return 403 instead of 401. The frontend refresh logic only
+            // triggers on 401, so the token was never refreshed and the user was logged out.
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token expired or invalid\"}");
+            return; // ✅ Stop the filter chain — don't continue to the controller
         }
 
         filterChain.doFilter(request, response);

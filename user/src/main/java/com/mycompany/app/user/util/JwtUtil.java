@@ -5,17 +5,31 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    // Secure random ≥256-bit key generated once per app start (dev-friendly)
-    private static final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final SecretKey key;
+    private final long expirationMs;
+    private final long refreshExpirationMs;
+
+    // ✅ Key is loaded from application.properties — stable across restarts
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration-ms:900000}") long expirationMs,
+            @Value("${jwt.refresh-expiration-ms:604800000}") long refreshExpirationMs
+    ) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMs = expirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
+    }
 
     // ─────────────────────────────────────────
     // TOKEN GENERATION
@@ -28,8 +42,8 @@ public class JwtUtil {
                 .claim("userId", user.getId())
                 .claim("role", user.getRole() != null ? user.getRole().name() : null)
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now + 60_000L))                   // 60 seconds (for testing)
-                .signWith(key)
+                .setExpiration(new Date(now + expirationMs))   // ✅ 15 minutes (from config)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -39,8 +53,8 @@ public class JwtUtil {
                 .setSubject(user.getEmail())
                 .claim("userId", user.getId())
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now + 604_800_000L))                // 7 days
-                .signWith(key)
+                .setExpiration(new Date(now + refreshExpirationMs))  // ✅ 7 days (from config)
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -61,28 +75,23 @@ public class JwtUtil {
     // CLAIM EXTRACTORS
     // ─────────────────────────────────────────
 
-    // ✅ Extract email from subject
-    public static String extractEmail(String token) {
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // ✅ Extract userId from claims
-    public static Integer extractUserId(String token) {
+    public Integer extractUserId(String token) {
         return extractClaim(token, claims -> claims.get("userId", Integer.class));
     }
 
-    // ✅ Extract role from claims
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    // ✅ Extract expiration
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // ✅ Generic claim extractor — all methods above use this
-    public static <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
@@ -91,7 +100,7 @@ public class JwtUtil {
     // INTERNAL HELPERS
     // ─────────────────────────────────────────
 
-    private static Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()

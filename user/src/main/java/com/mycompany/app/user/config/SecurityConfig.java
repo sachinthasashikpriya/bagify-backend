@@ -66,6 +66,13 @@ public class SecurityConfig {
                         ).permitAll() // ✅ public
                         .anyRequest().authenticated()                                   // ✅ everything else needs JWT
                 )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\"}");
+                        })
+                )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)        // ✅ no sessions, JWT only
                 )
