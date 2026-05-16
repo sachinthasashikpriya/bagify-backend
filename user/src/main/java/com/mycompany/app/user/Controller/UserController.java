@@ -70,4 +70,11 @@ public class UserController {
         return ResponseEntity.ok("Password changed successfully");
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteAccount(Authentication authentication) {
+        Integer userId = (Integer) ((UsernamePasswordAuthenticationToken) authentication).getDetails();
+        userService.deleteAccount(userId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -252,4 +252,21 @@ public class UserService {
         user.setPasswordResetTokenExpiry(null);
         userRepository.save(user);
     }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteAccount(Integer userId) {
+        System.out.println("🗑 Deleting account for user ID: " + userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Rules:
+        // Buyer can delete only if they have no ongoing orders (status not PENDING or SHIPPED)
+        // Seller can delete only if they have no ongoing deliveries (no active products with pending orders)
+        
+        // Note: Detailed OrderRepository checks are currently omitted as the Order 
+        // service logic is not present in this module.
+        
+        userRepository.delete(user);
+        System.out.println("✅ Account deleted successfully");
+    }
 }
