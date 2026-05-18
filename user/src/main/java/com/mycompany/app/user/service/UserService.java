@@ -81,7 +81,7 @@ public class UserService {
         String token = jwtUtil.generateToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);
 
-        return new AuthResponse(token, refreshToken, user);
+        return new AuthResponse(token, refreshToken, mapToProfileResponse(user));
     }
 
     public AuthResponse refreshToken(TokenRefreshRequest request) {
@@ -102,13 +102,37 @@ public class UserService {
         String newToken = jwtUtil.generateToken(user);
         String newRefreshToken = jwtUtil.generateRefreshToken(user);
 
-        return new AuthResponse(newToken, newRefreshToken, user);
+        return new AuthResponse(newToken, newRefreshToken, mapToProfileResponse(user));
     }
 
     public UserProfileResponse getProfileByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        return mapToProfileResponse(user);
+    }
+
+    public UserProfileResponse mapToProfileResponse(User user) {
+        if (user instanceof Seller) {
+            Seller seller = (Seller) user;
+            return new SellerProfileResponse(
+                    seller.getId(),
+                    seller.getName(),
+                    seller.getEmail(),
+                    seller.getPhone(),
+                    seller.getAddress(),
+                    seller.getRole().name(),
+                    seller.getProfileImageUrl(),
+                    seller.getCreatedAt(),
+                    seller.getVerificationStatus(),
+                    seller.getBusinessName(),
+                    seller.getRegistrationNumber(),
+                    seller.getNicImageUrl(),
+                    seller.getBrCertificateUrl(),
+                    seller.getRejectionReason(),
+                    seller.getSubmittedAt()
+            );
+        }
         return new UserProfileResponse(
                 user.getId(),
                 user.getName(),
@@ -131,7 +155,7 @@ public class UserService {
     }
 
     // ✅ Correct — use userId from JWT for fast lookup
-    public User updateProfile(Integer userId, String currentEmail, UpdateUserRequest request) throws AccessDeniedException {
+    public UserProfileResponse updateProfile(Integer userId, String currentEmail, UpdateUserRequest request) throws AccessDeniedException {
 
         User user = userRepository.findById(userId)  // ✅ fast primary key lookup
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -181,7 +205,8 @@ public class UserService {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
-        return userRepository.save(user);
+        user = userRepository.save(user);
+        return mapToProfileResponse(user);
     }
 
     public void disableUser(int id) {
@@ -268,5 +293,32 @@ public class UserService {
         
         userRepository.delete(user);
         System.out.println("✅ Account deleted successfully");
+    }
+
+    public UserProfileResponse submitVerification(Integer userId, VerificationRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (!(user instanceof Seller)) {
+            throw new IllegalArgumentException("Only sellers can submit verification");
+        }
+
+        Seller seller = (Seller) user;
+
+        if (seller.getVerificationStatus() == Seller.VerificationStatus.APPROVED ||
+                seller.getVerificationStatus() == Seller.VerificationStatus.PENDING) {
+            throw new IllegalStateException("Verification is already approved or pending review");
+        }
+
+        seller.setBusinessName(request.getBusinessName());
+        seller.setRegistrationNumber(request.getRegistrationNumber());
+        seller.setBrCertificateUrl(request.getBrCertificateUrl());
+        seller.setNicImageUrl(request.getNicImageUrl());
+        seller.setVerificationStatus(Seller.VerificationStatus.PENDING);
+        seller.setSubmittedAt(java.time.LocalDateTime.now());
+        seller.setRejectionReason(null);
+
+        seller = userRepository.save(seller);
+        return mapToProfileResponse(seller);
     }
 }

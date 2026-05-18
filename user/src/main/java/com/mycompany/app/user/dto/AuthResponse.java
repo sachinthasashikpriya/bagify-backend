@@ -1,6 +1,6 @@
 package com.mycompany.app.user.dto;
 
-import com.mycompany.app.user.entity.User;
+import com.mycompany.app.user.dto.UserProfileResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -10,9 +10,9 @@ public class AuthResponse {
 
     private String token;
     private String refreshToken;
-    private User user;
+    private UserProfileResponse user;
 
-    public AuthResponse(String token, String refreshToken, User user) {
+    public AuthResponse(String token, String refreshToken, UserProfileResponse user) {
         this.token = token;
         this.refreshToken = refreshToken;
         this.user = user;
@@ -20,5 +20,5 @@ public class AuthResponse {
 
     public String getToken() { return token; }
     public String getRefreshToken() { return refreshToken; }
-    public User getUser() { return user; }
+    public UserProfileResponse getUser() { return user; }
 }

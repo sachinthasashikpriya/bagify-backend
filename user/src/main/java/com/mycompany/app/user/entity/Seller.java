@@ -21,4 +21,15 @@ public class Seller extends User {
     private String NICNumber;
     private String nicImageUrl;
     private String brCertificateUrl;
+
+    @Enumerated(EnumType.STRING)
+    private VerificationStatus verificationStatus = VerificationStatus.NONE;
+
+    private String rejectionReason;
+
+    private java.time.LocalDateTime submittedAt;
+
+    public enum VerificationStatus {
+        NONE, PENDING, APPROVED, REJECTED
+    }
 }

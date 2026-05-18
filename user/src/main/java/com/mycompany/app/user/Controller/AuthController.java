@@ -6,6 +6,7 @@ import com.mycompany.app.user.dto.LoginRequest;
 import com.mycompany.app.user.dto.RegisterRequest;
 import com.mycompany.app.user.dto.ResetPasswordRequest;
 import com.mycompany.app.user.dto.TokenRefreshRequest;
+import com.mycompany.app.user.dto.UserProfileResponse;
 import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.service.UserService;
 import com.mycompany.app.user.util.JwtUtil;
@@ -23,9 +24,9 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid  RegisterRequest registerRequest) {
+    public ResponseEntity<UserProfileResponse> register(@RequestBody @Valid  RegisterRequest registerRequest) {
         User user = userService.register(registerRequest);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(userService.mapToProfileResponse(user));
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {

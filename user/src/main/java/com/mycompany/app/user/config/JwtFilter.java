@@ -42,12 +42,15 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             String  email  = jwtUtil.extractEmail(jwt);
             Integer userId = jwtUtil.extractUserId(jwt);
+            String  role   = jwtUtil.extractRole(jwt);
+
+            String roleName = role != null ? "ROLE_" + role : "ROLE_USER";
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
                             email,
                             null,
-                            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            List.of(new SimpleGrantedAuthority(roleName))
                     );
 
             authToken.setDetails(userId); // ✅ userId accessible in controller

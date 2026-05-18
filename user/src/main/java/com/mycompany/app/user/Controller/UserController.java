@@ -3,6 +3,8 @@ package com.mycompany.app.user.Controller;
 
 import com.mycompany.app.user.dto.RegisterRequest;
 import com.mycompany.app.user.dto.UpdateUserRequest;
+import com.mycompany.app.user.dto.VerificationRequest;
+import com.mycompany.app.user.dto.UserProfileResponse;
 import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.service.UserService;
 import com.mycompany.app.user.util.JwtUtil;
@@ -13,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,14 +31,14 @@ public class UserController {
 
 
     @GetMapping("/me")
-    public ResponseEntity<User> getMyProfile(Authentication authentication) {
+    public ResponseEntity<UserProfileResponse> getMyProfile(Authentication authentication) {
         String email = authentication.getName();
-        return ResponseEntity.ok(userService.getByEmail(email));
+        return ResponseEntity.ok(userService.getProfileByEmail(email));
     }
 
 
     @PutMapping("/profile")
-    public ResponseEntity<User> updateProfile(
+    public ResponseEntity<UserProfileResponse> updateProfile(
             Authentication authentication,
             @RequestBody UpdateUserRequest request
     ) throws AccessDeniedException {
@@ -75,6 +78,16 @@ public class UserController {
         Integer userId = (Integer) ((UsernamePasswordAuthenticationToken) authentication).getDetails();
         userService.deleteAccount(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PostMapping("/profile/verification")
+    public ResponseEntity<UserProfileResponse> submitVerification(
+            Authentication authentication,
+            @RequestBody VerificationRequest request
+    ) {
+        Integer userId = (Integer) ((UsernamePasswordAuthenticationToken) authentication).getDetails();
+        return ResponseEntity.ok(userService.submitVerification(userId, request));
     }
 
 }
