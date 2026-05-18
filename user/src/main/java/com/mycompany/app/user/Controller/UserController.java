@@ -58,10 +58,19 @@ public class UserController {
     }
 
     //Admin: disable user
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/disable")
     public ResponseEntity<String> disableUser(@PathVariable int id) {
         userService.disableUser(id);
         return ResponseEntity.ok("User disabled successfully");
+    }
+
+    //Admin: enable user
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/enable")
+    public ResponseEntity<String> enableUser(@PathVariable int id) {
+        userService.enableUser(id);
+        return ResponseEntity.ok("User enabled successfully");
     }
 
     @PostMapping("/change-password")
