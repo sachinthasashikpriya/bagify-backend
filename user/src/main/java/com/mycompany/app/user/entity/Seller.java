@@ -29,6 +29,8 @@ public class Seller extends User {
 
     private java.time.LocalDateTime submittedAt;
 
+    private java.time.LocalDateTime reviewedAt;
+
     public enum VerificationStatus {
         NONE, PENDING, APPROVED, REJECTED
     }
