@@ -139,7 +139,10 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<Product> getAllProducts() {
+    public List<Product> getAllProducts(String category) {
+        if (category != null && !category.trim().isEmpty()) {
+            return productRepository.findByCategoryIgnoreCase(category);
+        }
         return productRepository.findAll();
     }
 
