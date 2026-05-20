@@ -139,11 +139,14 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<Product> getAllProducts(String category) {
-        if (category != null && !category.trim().isEmpty()) {
-            return productRepository.findByCategoryIgnoreCase(category);
+    public List<Product> getAllProducts(String category, String search) {
+        if ((category == null || category.trim().isEmpty()) && (search == null || search.trim().isEmpty())) {
+            return productRepository.findAll();
         }
-        return productRepository.findAll();
+        return productRepository.findByCategoryAndSearch(
+            category != null && !category.trim().isEmpty() ? category : null,
+            search != null && !search.trim().isEmpty() ? search : null
+        );
     }
 
     @Transactional(readOnly = true)

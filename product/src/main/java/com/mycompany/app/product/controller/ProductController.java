@@ -27,8 +27,10 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts(@RequestParam(required = false) String category) {
-        List<Product> products = productService.getAllProducts(category);
+    public ResponseEntity<List<ProductResponse>> getAllProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search) {
+        List<Product> products = productService.getAllProducts(category, search);
         List<ProductResponse> responses = products.stream()
                 .map(ProductResponse::fromEntity)
                 .collect(Collectors.toList());
