@@ -78,4 +78,60 @@ public class CartService {
             return newItem;
         }
     }
+
+    @Transactional
+    public void updateQuantity(int buyerId, Long productId, com.mycompany.app.user.dto.UpdateCartItemRequest request) {
+        Cart cart = cartRepository.findByBuyerId(buyerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
+
+        Optional<CartItem> existingItemOpt = cart.getItems().stream()
+                .filter(item -> item.getProductId().equals(productId))
+                .findFirst();
+
+        if (existingItemOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found in cart");
+        }
+
+        CartItem existingItem = existingItemOpt.get();
+
+        if (request.getQuantity() <= 0) {
+            cart.getItems().remove(existingItem);
+            return;
+        }
+
+        ProductDto product;
+        try {
+            product = restTemplate.getForObject("http://PRODUCT/api/v1/products/" + productId, ProductDto.class);
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error communicating with product service", e);
+        }
+
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
+        }
+
+        if (request.getQuantity() > product.getStock()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Requested quantity exceeds available stock");
+        }
+
+        existingItem.setQuantity(request.getQuantity());
+    }
+
+    @Transactional
+    public void removeFromCart(int buyerId, Long productId) {
+        Cart cart = cartRepository.findByBuyerId(buyerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
+
+        Optional<CartItem> existingItemOpt = cart.getItems().stream()
+                .filter(item -> item.getProductId().equals(productId))
+                .findFirst();
+
+        if (existingItemOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found in cart");
+        }
+
+        cart.getItems().remove(existingItemOpt.get());
+    }
 }

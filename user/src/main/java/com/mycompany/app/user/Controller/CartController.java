@@ -27,4 +27,25 @@ public class CartController {
         CartItem item = cartService.addToCart(buyerId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(item);
     }
+
+    @PutMapping("/items/{productId}")
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<Void> updateQuantity(
+            @PathVariable Long productId,
+            @Valid @RequestBody com.mycompany.app.user.dto.UpdateCartItemRequest request,
+            Authentication authentication) {
+        Integer buyerId = (Integer) authentication.getDetails();
+        cartService.updateQuantity(buyerId, productId, request);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/items/{productId}")
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<Void> removeFromCart(
+            @PathVariable Long productId,
+            Authentication authentication) {
+        Integer buyerId = (Integer) authentication.getDetails();
+        cartService.removeFromCart(buyerId, productId);
+        return ResponseEntity.ok().build();
+    }
 }
