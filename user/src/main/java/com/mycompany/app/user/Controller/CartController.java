@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import com.mycompany.app.user.dto.CartItemDto;
 
 @RestController
 @RequestMapping("/api/v1/cart")
@@ -18,6 +20,14 @@ public class CartController {
 
     public CartController(CartService cartService) {
         this.cartService = cartService;
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<List<CartItemDto>> getCartItems(Authentication authentication) {
+        Integer buyerId = (Integer) authentication.getDetails();
+        List<CartItemDto> items = cartService.getCartItems(buyerId);
+        return ResponseEntity.ok(items);
     }
 
     @PostMapping("/items")

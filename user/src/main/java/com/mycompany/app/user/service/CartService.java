@@ -16,6 +16,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import com.mycompany.app.user.dto.CartItemDto;
 
 @Service
 public class CartService {
@@ -133,5 +137,36 @@ public class CartService {
         }
 
         cart.getItems().remove(existingItemOpt.get());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CartItemDto> getCartItems(int buyerId) {
+        Optional<Cart> cartOpt = cartRepository.findByBuyerId(buyerId);
+        if (cartOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Cart cart = cartOpt.get();
+        List<CartItemDto> result = new ArrayList<>();
+
+        for (CartItem item : cart.getItems()) {
+            try {
+                ProductDto product = restTemplate.getForObject("http://PRODUCT/api/v1/products/" + item.getProductId(), ProductDto.class);
+                if (product != null) {
+                    CartItemDto dto = new CartItemDto();
+                    dto.setId(item.getId());
+                    dto.setProductId(item.getProductId());
+                    dto.setProductName(product.getName());
+                    dto.setProductImage(product.getImage());
+                    dto.setPrice(product.getPrice());
+                    dto.setStock(product.getStock());
+                    dto.setQuantity(item.getQuantity());
+                    result.add(dto);
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to fetch product " + item.getProductId() + ": " + e.getMessage());
+            }
+        }
+        return result;
     }
 }
