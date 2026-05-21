@@ -139,6 +139,14 @@ public class CartService {
         cart.getItems().remove(existingItemOpt.get());
     }
 
+    @Transactional
+    public void clearCart(int buyerId) {
+        Cart cart = cartRepository.findByBuyerId(buyerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
+
+        cart.getItems().clear();
+    }
+
     @Transactional(readOnly = true)
     public List<CartItemDto> getCartItems(int buyerId) {
         Optional<Cart> cartOpt = cartRepository.findByBuyerId(buyerId);

@@ -58,4 +58,12 @@ public class CartController {
         cartService.removeFromCart(buyerId, productId);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<Void> clearCart(Authentication authentication) {
+        Integer buyerId = (Integer) authentication.getDetails();
+        cartService.clearCart(buyerId);
+        return ResponseEntity.ok().build();
+    }
 }
