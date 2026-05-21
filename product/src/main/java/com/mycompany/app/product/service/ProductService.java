@@ -191,4 +191,16 @@ public class ProductService {
             return productRepository.save(product);
         });
     }
+
+    @Transactional
+    public boolean deductStock(Long productId, int quantity) {
+        return productRepository.findById(productId).map(product -> {
+            if (product.getStock() >= quantity) {
+                product.setStock(product.getStock() - quantity);
+                productRepository.save(product);
+                return true;
+            }
+            return false;
+        }).orElse(false);
+    }
 }

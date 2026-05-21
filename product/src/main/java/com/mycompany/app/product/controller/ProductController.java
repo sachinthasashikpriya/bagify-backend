@@ -89,4 +89,14 @@ public class ProductController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PostMapping("/{id}/deduct-stock")
+    public ResponseEntity<Void> deductStock(@PathVariable Long id, @RequestParam int quantity) {
+        boolean success = productService.deductStock(id, quantity);
+        if (success) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
 }

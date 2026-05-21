@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/api/v1/products", "/api/v1/products/**").permitAll() // ✅ Permit all GET requests publicly
+                        .requestMatchers(HttpMethod.POST, "/api/v1/products/*/deduct-stock").permitAll() // ✅ Permit internal deduct-stock calls
                         .anyRequest().authenticated() // ✅ Other requests require authentication
                 )
                 .exceptionHandling(ex -> ex
