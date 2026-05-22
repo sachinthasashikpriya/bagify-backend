@@ -14,9 +14,12 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>user</module>
-		<module>eureka-server</module>
-		<module>product</module>
+		<module>eureka-server</module>   <!-- startup order 1 -->
+		<module>user</module>            <!-- startup order 2 -->
+		<module>product</module>         <!-- startup order 3 -->
+		<module>notification</module>    <!-- startup order 4 -->
+		<module>order</module>           <!-- startup order 5 -->
+		<module>api-gateway</module>     <!-- startup order 6 (last) -->
 	</modules>
 	<description>Demo project for Spring Boot</description>
 	<url/>

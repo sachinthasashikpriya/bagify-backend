@@ -1,11 +1,13 @@
 package com.mycompany.app.user.service;
 
-import com.mycompany.app.user.Exception.ResourceNotFoundException;
+import com.mycompany.app.user.exception.ResourceNotFoundException;
 import com.mycompany.app.user.dto.*;
 import com.mycompany.app.user.entity.Buyer;
 import com.mycompany.app.user.entity.Role;
 import com.mycompany.app.user.entity.Seller;
 import com.mycompany.app.user.entity.User;
+import com.mycompany.app.user.repository.BuyerRepository;
+import com.mycompany.app.user.repository.SellerRepository;
 import com.mycompany.app.user.repository.UserRepository;
 import com.mycompany.app.user.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +25,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
+    private final SellerRepository sellerRepository;
+    private final BuyerRepository buyerRepository;
 
     public User register(RegisterRequest registerRequest) {
 
@@ -320,5 +325,36 @@ public class UserService {
 
         seller = userRepository.save(seller);
         return mapToProfileResponse(seller);
+    }
+
+    // ─── Inter-service endpoints ───────────────────────────────────────────────
+
+    /**
+     * Returns minimal seller info for the product service.
+     * Used when a seller creates a product and their real name/rating is needed.
+     */
+    public Optional<SellerInfoResponse> findSellerById(Integer sellerId) {
+        return sellerRepository.findById(sellerId)
+                .map(s -> new SellerInfoResponse(
+                        (long) s.getId(),
+                        s.getName(),
+                        s.getEmail(),
+                        s.getBusinessName(),
+                        s.getRating()
+                ));
+    }
+
+    /**
+     * Returns minimal buyer info for the order service.
+     * Used to pre-fill shipping address at checkout.
+     */
+    public Optional<BuyerInfoResponse> findBuyerById(Integer buyerId) {
+        return buyerRepository.findById(buyerId)
+                .map(b -> new BuyerInfoResponse(
+                        (long) b.getId(),
+                        b.getName(),
+                        b.getEmail(),
+                        b.getAddress()
+                ));
     }
 }

@@ -4,8 +4,11 @@ import com.mycompany.app.product.entity.Product;
 import com.mycompany.app.product.entity.Review;
 import com.mycompany.app.product.repository.ProductRepository;
 import jakarta.annotation.PostConstruct;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -161,24 +164,40 @@ public class ProductService {
     }
 
     @Transactional
-    public Optional<Product> updateProduct(Long id, Product updates) {
+    public Optional<Product> updateProduct(Long id, Product updates, Authentication authentication) {
         return productRepository.findById(id).map(existing -> {
+            // Owner check: seller can only update their own products; ADMIN can update any
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin) {
+                Integer callerId = (Integer) ((org.springframework.security.authentication.UsernamePasswordAuthenticationToken) authentication).getDetails();
+                if (callerId == null || !callerId.toString().equals(existing.getSellerId())) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only update your own products");
+                }
+            }
             if (updates.getName() != null) existing.setName(updates.getName());
             if (updates.getDescription() != null) existing.setDescription(updates.getDescription());
             if (updates.getPrice() > 0) existing.setPrice(updates.getPrice());
             if (updates.getStock() >= 0) existing.setStock(updates.getStock());
             if (updates.getCategory() != null) existing.setCategory(updates.getCategory());
             if (updates.getImage() != null) existing.setImage(updates.getImage());
-            if (updates.getSellerName() != null) existing.setSellerName(updates.getSellerName());
-            if (updates.getSellerRating() > 0) existing.setSellerRating(updates.getSellerRating());
             existing.calculateAverageRating();
             return productRepository.save(existing);
         });
     }
 
     @Transactional
-    public boolean deleteProduct(Long id) {
+    public boolean deleteProduct(Long id, Authentication authentication) {
         return productRepository.findById(id).map(product -> {
+            // Owner check: seller can only delete their own products; ADMIN can delete any
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin) {
+                Integer callerId = (Integer) ((org.springframework.security.authentication.UsernamePasswordAuthenticationToken) authentication).getDetails();
+                if (callerId == null || !callerId.toString().equals(product.getSellerId())) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own products");
+                }
+            }
             productRepository.delete(product);
             return true;
         }).orElse(false);

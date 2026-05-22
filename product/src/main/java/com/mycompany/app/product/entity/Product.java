@@ -16,6 +16,8 @@ import java.util.List;
 @Builder
 public class Product {
 
+    public enum ProductStatus { ACTIVE, DRAFT }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,6 +38,11 @@ public class Product {
     private String sellerName;
     private double sellerRating;
     private double averageRating;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private ProductStatus status = ProductStatus.ACTIVE;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference

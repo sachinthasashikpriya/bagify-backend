@@ -1,4 +1,4 @@
-package com.mycompany.app.product.config;
+package com.mycompany.app.order.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,29 +16,31 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * All order endpoints require JWT — there are no public endpoints in this service.
+ * TODO: Once api-gateway is live, remove the CORS config from here
+ * (the gateway will handle CORS centrally).
+ */
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtFilter jwtAuthFilter;
 
+    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+    private String allowedOrigins;
+
     public SecurityConfig(JwtFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
-    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
-    private String allowedOrigins;
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
         List<String> origins = Arrays.asList(allowedOrigins.split(","));
         config.setAllowedOrigins(origins);
-
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        config.setAllowedHeaders(List.of(
-                "Authorization", "Content-Type", "Accept",
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept",
                 "X-Requested-With", "Cache-Control", "Origin"));
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
@@ -55,14 +57,14 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products", "/api/v1/products/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated()  // All order endpoints require authentication
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
+                            response.getWriter().write(
+                                    "{\"error\": \"Unauthorized\", \"message\": \"Authentication required\"}");
                         })
                 )
                 .sessionManagement(session -> session

@@ -1,12 +1,13 @@
 server:
-  port: 8082
+  port: 8083
+
 spring:
   application:
-    name: product
+    name: order
   datasource:
-    password: sachintha2002
-    url: jdbc:postgresql://localhost:5432/BagifyProduct
+    url: jdbc:postgresql://localhost:5432/bagify_orders
     username: postgres
+    password: sachintha2002
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,6 +16,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+
 eureka:
   client:
     service-url:
@@ -23,12 +25,12 @@ eureka:
     register-with-eureka: true
     enabled: true
 
-# JWT Configuration
+# JWT secret MUST match the user service secret exactly
 jwt:
   secret: bagify-super-secret-key-change-me-in-production-min-32-chars!!
   expiration-ms: 900000
   refresh-expiration-ms: 604800000
 
-# CORS
+# CORS — remove this once api-gateway is live (gateway handles CORS centrally)
 cors:
   allowed-origins: http://localhost:5173,http://localhost:5174,http://localhost:3000

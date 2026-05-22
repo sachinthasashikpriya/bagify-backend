@@ -24,6 +24,7 @@ public class ProductResponse {
     private String sellerName;
     private double sellerRating;
     private double averageRating;
+    private String status;
     private List<ReviewResponse> reviews;
 
     public static ProductResponse fromEntity(Product product) {
@@ -40,6 +41,7 @@ public class ProductResponse {
                 .sellerName(product.getSellerName())
                 .sellerRating(product.getSellerRating())
                 .averageRating(product.getAverageRating())
+                .status(product.getStatus() != null ? product.getStatus().name() : null)
                 .reviews(product.getReviews() != null 
                         ? product.getReviews().stream().map(ReviewResponse::fromEntity).collect(Collectors.toList())
                         : Collections.emptyList())

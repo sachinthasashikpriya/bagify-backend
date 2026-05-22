@@ -1,7 +1,9 @@
 package com.mycompany.app.user.service;
 
 import com.mycompany.app.user.dto.AddToCartRequest;
+import com.mycompany.app.user.dto.CartItemDto;
 import com.mycompany.app.user.dto.ProductDto;
+import com.mycompany.app.user.dto.UpdateCartItemRequest;
 import com.mycompany.app.user.entity.Buyer;
 import com.mycompany.app.user.entity.Cart;
 import com.mycompany.app.user.entity.CartItem;
@@ -10,40 +12,54 @@ import com.mycompany.app.user.repository.CartRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import com.mycompany.app.user.dto.CartItemDto;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CartService {
 
     private final CartRepository cartRepository;
     private final BuyerRepository buyerRepository;
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
 
-    public CartService(CartRepository cartRepository, BuyerRepository buyerRepository, RestTemplate restTemplate) {
+    public CartService(CartRepository cartRepository,
+                       BuyerRepository buyerRepository,
+                       WebClient.Builder webClientBuilder) {
         this.cartRepository = cartRepository;
         this.buyerRepository = buyerRepository;
-        this.restTemplate = restTemplate;
+        // lb://PRODUCT resolves via Eureka load balancing
+        this.webClient = webClientBuilder.baseUrl("http://PRODUCT").build();
     }
+
+    // ─── Private helper ─────────────────────────────────────────────────────────
+
+    private ProductDto fetchProduct(Long productId) {
+        try {
+            return webClient.get()
+                    .uri("/api/v1/products/{id}", productId)
+                    .retrieve()
+                    .bodyToMono(ProductDto.class)
+                    .block();
+        } catch (WebClientResponseException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error communicating with product service: " + e.getMessage());
+        }
+    }
+
+    // ─── Public methods ──────────────────────────────────────────────────────────
 
     @Transactional
     public CartItem addToCart(int buyerId, AddToCartRequest request) {
-        ProductDto product;
-        try {
-            product = restTemplate.getForObject("http://PRODUCT/api/v1/products/" + request.getProductId(), ProductDto.class);
-        } catch (HttpClientErrorException.NotFound e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error communicating with product service", e);
-        }
+        ProductDto product = fetchProduct(request.getProductId());
 
         if (product == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
@@ -65,7 +81,8 @@ public class CartService {
         int newQuantity = currentQuantity + request.getQuantity();
 
         if (newQuantity > product.getStock()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Requested quantity exceeds available stock");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Requested quantity exceeds available stock");
         }
 
         if (existingItemOpt.isPresent()) {
@@ -84,7 +101,7 @@ public class CartService {
     }
 
     @Transactional
-    public void updateQuantity(int buyerId, Long productId, com.mycompany.app.user.dto.UpdateCartItemRequest request) {
+    public void updateQuantity(int buyerId, Long productId, UpdateCartItemRequest request) {
         Cart cart = cartRepository.findByBuyerId(buyerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
 
@@ -103,21 +120,14 @@ public class CartService {
             return;
         }
 
-        ProductDto product;
-        try {
-            product = restTemplate.getForObject("http://PRODUCT/api/v1/products/" + productId, ProductDto.class);
-        } catch (HttpClientErrorException.NotFound e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error communicating with product service", e);
-        }
-
+        ProductDto product = fetchProduct(productId);
         if (product == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
         }
 
         if (request.getQuantity() > product.getStock()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Requested quantity exceeds available stock");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Requested quantity exceeds available stock");
         }
 
         existingItem.setQuantity(request.getQuantity());
@@ -143,7 +153,6 @@ public class CartService {
     public void clearCart(int buyerId) {
         Cart cart = cartRepository.findByBuyerId(buyerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found"));
-
         cart.getItems().clear();
     }
 
@@ -159,7 +168,12 @@ public class CartService {
 
         for (CartItem item : cart.getItems()) {
             try {
-                ProductDto product = restTemplate.getForObject("http://PRODUCT/api/v1/products/" + item.getProductId(), ProductDto.class);
+                ProductDto product = webClient.get()
+                        .uri("/api/v1/products/{id}", item.getProductId())
+                        .retrieve()
+                        .bodyToMono(ProductDto.class)
+                        .block();
+
                 if (product != null) {
                     CartItemDto dto = new CartItemDto();
                     dto.setId(item.getId());
@@ -172,6 +186,7 @@ public class CartService {
                     result.add(dto);
                 }
             } catch (Exception e) {
+                // Log but don't fail the whole cart if one product fetch fails
                 System.err.println("Failed to fetch product " + item.getProductId() + ": " + e.getMessage());
             }
         }
