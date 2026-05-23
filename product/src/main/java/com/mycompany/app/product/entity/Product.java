@@ -41,6 +41,7 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @org.hibernate.annotations.ColumnDefault("'ACTIVE'")
     @Builder.Default
     private ProductStatus status = ProductStatus.ACTIVE;
 

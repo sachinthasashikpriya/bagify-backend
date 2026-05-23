@@ -31,6 +31,3 @@ jwt:
   expiration-ms: 900000
   refresh-expiration-ms: 604800000
 
-# CORS — remove this once api-gateway is live (gateway handles CORS centrally)
-cors:
-  allowed-origins: http://localhost:5173,http://localhost:5174,http://localhost:3000
