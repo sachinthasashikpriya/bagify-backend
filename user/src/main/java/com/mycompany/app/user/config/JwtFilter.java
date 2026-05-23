@@ -1,6 +1,8 @@
 package com.mycompany.app.user.config;
 
 import com.mycompany.app.user.util.JwtUtil;
+import com.mycompany.app.user.repository.UserRepository;
+import com.mycompany.app.user.entity.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,9 +20,11 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public JwtFilter(JwtUtil jwtUtil) {
+    public JwtFilter(JwtUtil jwtUtil, UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -43,6 +47,15 @@ public class JwtFilter extends OncePerRequestFilter {
             String  email  = jwtUtil.extractEmail(jwt);
             Integer userId = jwtUtil.extractUserId(jwt);
             String  role   = jwtUtil.extractRole(jwt);
+
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null || !user.isEnabled()) {
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Account is disabled\"}");
+                return;
+            }
 
             String roleName = role != null ? "ROLE_" + role : "ROLE_USER";
 

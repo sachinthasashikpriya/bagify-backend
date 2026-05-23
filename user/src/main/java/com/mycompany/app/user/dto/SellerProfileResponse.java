@@ -18,9 +18,10 @@ public class SellerProfileResponse extends UserProfileResponse {
     private String brCertificateUrl;
     private String rejectionReason;
     private LocalDateTime submittedAt;
+    private LocalDateTime reviewedAt;
 
     public SellerProfileResponse(Integer id, String name, String email, String phone, String address, String role, String profileImageUrl, LocalDateTime createdAt,
-                                 VerificationStatus verificationStatus, String businessName, String registrationNumber, String nicImageUrl, String brCertificateUrl, String rejectionReason, LocalDateTime submittedAt) {
+                                 VerificationStatus verificationStatus, String businessName, String registrationNumber, String nicImageUrl, String brCertificateUrl, String rejectionReason, LocalDateTime submittedAt, LocalDateTime reviewedAt) {
         super(id, name, email, phone, address, role, profileImageUrl, createdAt);
         this.verificationStatus = verificationStatus;
         this.businessName = businessName;
@@ -29,5 +30,6 @@ public class SellerProfileResponse extends UserProfileResponse {
         this.brCertificateUrl = brCertificateUrl;
         this.rejectionReason = rejectionReason;
         this.submittedAt = submittedAt;
+        this.reviewedAt = reviewedAt;
     }
 }

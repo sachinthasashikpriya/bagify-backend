@@ -9,6 +9,7 @@ import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.repository.BuyerRepository;
 import com.mycompany.app.user.repository.SellerRepository;
 import com.mycompany.app.user.repository.UserRepository;
+import com.mycompany.app.user.repository.SellerRepository;
 import com.mycompany.app.user.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final SellerRepository sellerRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
@@ -83,6 +85,10 @@ public class UserService {
             throw new RuntimeException("Invalid password");
         }
 
+        if (!user.isEnabled()) {
+            throw new IllegalArgumentException("User account is disabled");
+        }
+
         String token = jwtUtil.generateToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);
 
@@ -101,7 +107,7 @@ public class UserService {
         }
 
         if (!user.isEnabled()) {
-            throw new RuntimeException("User account is disabled");
+            throw new IllegalArgumentException("User account is disabled");
         }
 
         String newToken = jwtUtil.generateToken(user);
@@ -135,7 +141,8 @@ public class UserService {
                     seller.getNicImageUrl(),
                     seller.getBrCertificateUrl(),
                     seller.getRejectionReason(),
-                    seller.getSubmittedAt()
+                    seller.getSubmittedAt(),
+                    seller.getReviewedAt()
             );
         }
         return new UserProfileResponse(
@@ -218,6 +225,13 @@ public class UserService {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Invalid user"));
 
         user.setEnabled(false);
+        userRepository.save(user);
+    }
+
+    public void enableUser(int id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Invalid user"));
+
+        user.setEnabled(true);
         userRepository.save(user);
     }
 
@@ -356,5 +370,39 @@ public class UserService {
                         b.getEmail(),
                         b.getAddress()
                 ));
+    }
+
+    public List<UserProfileResponse> getPendingVerifications() {
+        List<Seller> pendingSellers = sellerRepository.findAllByVerificationStatus(Seller.VerificationStatus.PENDING);
+        return pendingSellers.stream()
+                .map(this::mapToProfileResponse)
+                .toList();
+    }
+
+    public UserProfileResponse reviewVerification(int sellerId, VerificationReviewRequest request) {
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with ID: " + sellerId));
+
+        String decision = request.getDecision();
+        if (decision == null) {
+            throw new IllegalArgumentException("Decision is required");
+        }
+
+        if (decision.equalsIgnoreCase("APPROVED")) {
+            seller.setVerificationStatus(Seller.VerificationStatus.APPROVED);
+            seller.setRejectionReason(null);
+        } else if (decision.equalsIgnoreCase("REJECTED")) {
+            if (request.getRejectionReason() == null || request.getRejectionReason().isBlank()) {
+                throw new IllegalArgumentException("Rejection reason is required for REJECTED decision");
+            }
+            seller.setVerificationStatus(Seller.VerificationStatus.REJECTED);
+            seller.setRejectionReason(request.getRejectionReason());
+        } else {
+            throw new IllegalArgumentException("Invalid decision: " + decision + ". Must be APPROVED or REJECTED.");
+        }
+
+        seller.setReviewedAt(java.time.LocalDateTime.now());
+        Seller updatedSeller = sellerRepository.save(seller);
+        return mapToProfileResponse(updatedSeller);
     }
 }
