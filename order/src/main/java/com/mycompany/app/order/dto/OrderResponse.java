@@ -44,6 +44,8 @@ public class OrderResponse {
         private String imageUrl;
         private Integer quantity;
         private Double priceAtPurchase;
+        private String sellerId;
+        private String itemStatus;
 
         public static OrderItemDto fromEntity(OrderItem item) {
             return OrderItemDto.builder()
@@ -53,6 +55,8 @@ public class OrderResponse {
                     .imageUrl(item.getImageUrl())
                     .quantity(item.getQuantity())
                     .priceAtPurchase(item.getPriceAtPurchase())
+                    .sellerId(item.getSellerId())
+                    .itemStatus(item.getItemStatus() != null ? item.getItemStatus().name() : "PENDING")
                     .build();
         }
     }

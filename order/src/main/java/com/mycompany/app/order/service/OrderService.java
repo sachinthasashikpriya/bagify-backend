@@ -5,6 +5,7 @@ import com.mycompany.app.order.dto.OrderResponse;
 import com.mycompany.app.order.dto.ProductDto;
 import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
+import com.mycompany.app.order.repository.OrderItemRepository;
 import com.mycompany.app.order.repository.OrderRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,10 +19,12 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final ProductClient productClient;
 
-    public OrderService(OrderRepository orderRepository, ProductClient productClient) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductClient productClient) {
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
         this.productClient = productClient;
     }
 
@@ -89,6 +92,7 @@ public class OrderService {
             orderItem.setImageUrl(productSnapshot.getImage());
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setPriceAtPurchase(productSnapshot.getPrice());
+            orderItem.setSellerId(productSnapshot.getSellerId());
             order.getItems().add(orderItem);
         }
 
@@ -100,6 +104,24 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByBuyer(Integer buyerId) {
         return orderRepository.findByBuyerIdOrderByCreatedAtDesc(buyerId)
+                .stream()
+                .map(OrderResponse::fromEntity)
+                .toList();
+    }
+
+    /** Returns all orders containing items from a specific seller. */
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getOrdersBySeller(Integer sellerId) {
+        return orderRepository.findBySellerIdOrderByCreatedAtDesc(String.valueOf(sellerId))
+                .stream()
+                .map(OrderResponse::fromEntity)
+                .toList();
+    }
+
+    /** Returns all orders in the system. Restricted to ADMIN. */
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll()
                 .stream()
                 .map(OrderResponse::fromEntity)
                 .toList();
@@ -118,13 +140,111 @@ public class OrderService {
         return OrderResponse.fromEntity(order);
     }
 
-    /** Updates order status — restricted to SELLER or ADMIN in the controller. */
+    /** Updates order status — restricted to ADMIN only (global override). */
     @Transactional
-    public OrderResponse updateStatus(Long orderId, Order.OrderStatus newStatus) {
+    public OrderResponse updateStatus(Long orderId, Order.OrderStatus newStatus, Integer userId, boolean isAdmin) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
+        if (!isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can update the global order status");
+        }
+
         order.setStatus(newStatus);
         return OrderResponse.fromEntity(orderRepository.save(order));
+    }
+
+    /**
+     * Updates a single item's fulfillment status — called by the owning SELLER.
+     * After updating, recomputes the parent order's consolidated status automatically.
+     *
+     * This is the core of the hybrid model:
+     *   - Seller controls their own item status (PENDING → PROCESSING → PACKED → SHIPPED)
+     *   - Parent order status is derived from all items (computeStatus)
+     */
+    @Transactional
+    public OrderResponse updateItemStatus(Long orderId, Long itemId, OrderItem.ItemStatus newStatus, Integer sellerId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot update items of a cancelled order");
+        }
+
+        OrderItem item = orderItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order item not found"));
+
+        // Verify the item belongs to this order
+        if (!item.getOrder().getId().equals(orderId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item does not belong to this order");
+        }
+
+        // Verify this seller owns the item
+        if (!String.valueOf(sellerId).equals(item.getSellerId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this item");
+        }
+
+        // Sellers cannot set DELIVERED — that's reserved for admin/system
+        if (newStatus == OrderItem.ItemStatus.DELIVERED) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can mark items as DELIVERED");
+        }
+
+        item.setItemStatus(newStatus);
+        orderItemRepository.save(item);
+
+        // Recompute consolidated parent order status
+        order.computeStatus();
+        return OrderResponse.fromEntity(orderRepository.save(order));
+    }
+
+    /**
+     * Admin override — can update any item status including DELIVERED.
+     */
+    @Transactional
+    public OrderResponse updateItemStatusAdmin(Long orderId, Long itemId, OrderItem.ItemStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot update items of a cancelled order");
+        }
+
+        OrderItem item = orderItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order item not found"));
+
+        if (!item.getOrder().getId().equals(orderId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item does not belong to this order");
+        }
+
+        item.setItemStatus(newStatus);
+        orderItemRepository.save(item);
+
+        order.computeStatus();
+        return OrderResponse.fromEntity(orderRepository.save(order));
+    }
+
+    /** Cancels a PENDING order and restores stock. */
+    @Transactional
+    public OrderResponse cancelOrder(Long orderId, Integer buyerId, String bearerToken) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (!order.getBuyerId().equals(buyerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+
+        if (order.getStatus() != Order.OrderStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PENDING orders can be cancelled");
+        }
+
+        order.setStatus(Order.OrderStatus.CANCELLED);
+        Order saved = orderRepository.save(order);
+
+        // Restore stock for all items
+        for (OrderItem item : order.getItems()) {
+            productClient.restoreStock(item.getProductId(), item.getQuantity(), bearerToken);
+        }
+
+        return OrderResponse.fromEntity(saved);
     }
 }

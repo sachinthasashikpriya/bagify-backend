@@ -9,4 +9,7 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByBuyerIdOrderByCreatedAtDesc(Integer buyerId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT o FROM Order o JOIN o.items i WHERE i.sellerId = :sellerId ORDER BY o.createdAt DESC")
+    List<Order> findBySellerIdOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("sellerId") String sellerId);
 }

@@ -222,4 +222,13 @@ public class ProductService {
             return false;
         }).orElse(false);
     }
+
+    @Transactional
+    public boolean restoreStock(Long productId, int quantity) {
+        return productRepository.findById(productId).map(product -> {
+            product.setStock(product.getStock() + quantity);
+            productRepository.save(product);
+            return true;
+        }).orElse(false);
+    }
 }

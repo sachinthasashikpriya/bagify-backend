@@ -48,6 +48,40 @@ public class Order {
     private LocalDateTime createdAt;
 
     public enum OrderStatus {
-        PENDING, SHIPPED, DELIVERED, CANCELLED
+        PENDING, PROCESSING, PARTIALLY_SHIPPED, SHIPPED, DELIVERED, CANCELLED
+    }
+
+    /**
+     * Derives the consolidated parent-order status from individual item statuses.
+     * Call this after any item status change and persist the result.
+     *
+     * Rules (industry standard):
+     *  - If CANCELLED, stay CANCELLED
+     *  - All items DELIVERED   → DELIVERED
+     *  - All items SHIPPED+    → SHIPPED
+     *  - Any item SHIPPED      → PARTIALLY_SHIPPED
+     *  - Any item PROCESSING   → PROCESSING
+     *  - Otherwise             → PENDING
+     */
+    public void computeStatus() {
+        if (this.status == OrderStatus.CANCELLED) return;
+        if (items == null || items.isEmpty()) return;
+
+        long delivered = items.stream().filter(i -> i.getItemStatus() == OrderItem.ItemStatus.DELIVERED).count();
+        long shipped   = items.stream().filter(i -> i.getItemStatus() == OrderItem.ItemStatus.SHIPPED).count();
+        long processing= items.stream().filter(i -> i.getItemStatus() == OrderItem.ItemStatus.PROCESSING).count();
+        int  total     = items.size();
+
+        if (delivered == total) {
+            this.status = OrderStatus.DELIVERED;
+        } else if (shipped + delivered == total) {
+            this.status = OrderStatus.SHIPPED;
+        } else if (shipped > 0 || delivered > 0) {
+            this.status = OrderStatus.PARTIALLY_SHIPPED;
+        } else if (processing > 0) {
+            this.status = OrderStatus.PROCESSING;
+        } else {
+            this.status = OrderStatus.PENDING;
+        }
     }
 }

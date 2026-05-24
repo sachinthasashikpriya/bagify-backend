@@ -59,4 +59,21 @@ public class ProductClient {
                     "Error deducting stock for product " + productId + ": " + e.getMessage());
         }
     }
+
+    /**
+     * Atomically restore stock on the product service.
+     */
+    public void restoreStock(Long productId, int quantity, String bearerToken) {
+        try {
+            webClient.post()
+                    .uri("/api/v1/products/{id}/restore-stock?quantity={q}", productId, quantity)
+                    .header("Authorization", bearerToken)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error restoring stock for product " + productId + ": " + e.getMessage());
+        }
+    }
 }

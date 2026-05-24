@@ -3,6 +3,7 @@ package com.mycompany.app.order.controller;
 import com.mycompany.app.order.dto.CheckoutRequest;
 import com.mycompany.app.order.dto.OrderResponse;
 import com.mycompany.app.order.entity.Order;
+import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -49,14 +50,35 @@ public class OrderController {
     }
 
     /**
-     * GET /api/v1/orders/my-orders
+     * GET /api/v1/orders
      * Returns the authenticated buyer's full order history.
      */
-    @GetMapping("/my-orders")
+    @GetMapping
     @PreAuthorize("hasRole('BUYER')")
     public ResponseEntity<List<OrderResponse>> getMyOrders(Authentication authentication) {
         Integer buyerId = (Integer) authentication.getDetails();
         return ResponseEntity.ok(orderService.getOrdersByBuyer(buyerId));
+    }
+
+    /**
+     * GET /api/v1/orders/seller
+     * Returns the authenticated seller's order history.
+     */
+    @GetMapping("/seller")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<List<OrderResponse>> getSellerOrders(Authentication authentication) {
+        Integer sellerId = (Integer) authentication.getDetails();
+        return ResponseEntity.ok(orderService.getOrdersBySeller(sellerId));
+    }
+
+    /**
+     * GET /api/v1/orders/all
+     * Returns all orders in the system. Restricted to ADMIN.
+     */
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<OrderResponse>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
     }
 
     /**
@@ -77,15 +99,76 @@ public class OrderController {
     }
 
     /**
-     * PATCH /api/v1/orders/{id}/status
+     * PUT /api/v1/orders/{id}/status
      * Updates order status. Restricted to SELLER and ADMIN.
      */
-    @PatchMapping("/{id}/status")
+    @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
     public ResponseEntity<OrderResponse> updateStatus(
             @PathVariable Long id,
-            @RequestParam Order.OrderStatus status) {
+            @RequestParam Order.OrderStatus status,
+            Authentication authentication) {
 
-        return ResponseEntity.ok(orderService.updateStatus(id, status));
+        Integer userId = (Integer) authentication.getDetails();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        return ResponseEntity.ok(orderService.updateStatus(id, status, userId, isAdmin));
+    }
+
+    /**
+     * PUT /api/v1/orders/{id}/cancel
+     * Cancels a PENDING order. Restricted to the owning BUYER.
+     */
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<OrderResponse> cancelOrder(
+            @PathVariable Long id,
+            Authentication authentication,
+            HttpServletRequest httpRequest) {
+
+        Integer buyerId = (Integer) authentication.getDetails();
+        if (buyerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String bearerToken = httpRequest.getHeader("Authorization");
+
+        return ResponseEntity.ok(orderService.cancelOrder(id, buyerId, bearerToken));
+    }
+    /**
+     * PUT /api/v1/orders/{orderId}/items/{itemId}/status
+     * Updates a single item's fulfillment status — called by the owning SELLER.
+     * Seller can set: PENDING, PROCESSING, PACKED, SHIPPED (not DELIVERED).
+     * After this call the parent order status is auto-recomputed.
+     */
+    @PutMapping("/{orderId}/items/{itemId}/status")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<OrderResponse> updateItemStatus(
+            @PathVariable Long orderId,
+            @PathVariable Long itemId,
+            @RequestParam OrderItem.ItemStatus status,
+            Authentication authentication) {
+
+        Integer sellerId = (Integer) authentication.getDetails();
+        if (sellerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(orderService.updateItemStatus(orderId, itemId, status, sellerId));
+    }
+
+    /**
+     * PUT /api/v1/orders/{orderId}/items/{itemId}/status/admin
+     * Admin override — can set any status including DELIVERED.
+     */
+    @PutMapping("/{orderId}/items/{itemId}/status/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OrderResponse> updateItemStatusAdmin(
+            @PathVariable Long orderId,
+            @PathVariable Long itemId,
+            @RequestParam OrderItem.ItemStatus status) {
+
+        return ResponseEntity.ok(orderService.updateItemStatusAdmin(orderId, itemId, status));
     }
 }

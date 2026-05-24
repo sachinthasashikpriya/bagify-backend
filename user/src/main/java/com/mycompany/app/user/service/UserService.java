@@ -27,7 +27,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
-    private final SellerRepository sellerRepository;
     private final BuyerRepository buyerRepository;
 
     public User register(RegisterRequest registerRequest) {

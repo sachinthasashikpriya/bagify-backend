@@ -162,4 +162,20 @@ public class ProductController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
+
+    /**
+     * Restore stock — called internally by the order service.
+     * Requires authentication: the order service passes its JWT when calling this.
+     * NOT exposed publicly via the API Gateway.
+     */
+    @PostMapping("/{id}/restore-stock")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> restoreStock(@PathVariable Long id, @RequestParam int quantity) {
+        boolean success = productService.restoreStock(id, quantity);
+        if (success) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
 }
