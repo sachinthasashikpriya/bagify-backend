@@ -171,4 +171,18 @@ public class OrderController {
 
         return ResponseEntity.ok(orderService.updateItemStatusAdmin(orderId, itemId, status));
     }
+
+    /**
+     * GET /api/v1/orders/has-purchased
+     * Checks if a buyer has a DELIVERED order for a specific product.
+     * Internal endpoint for product service or frontend.
+     */
+    @GetMapping("/has-purchased")
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<Boolean> hasPurchased(
+            @RequestParam Long productId,
+            Authentication authentication) {
+        Integer buyerId = (Integer) authentication.getDetails();
+        return ResponseEntity.ok(orderService.hasPurchased(buyerId, productId));
+    }
 }

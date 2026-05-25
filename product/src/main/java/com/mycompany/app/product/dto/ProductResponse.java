@@ -24,6 +24,7 @@ public class ProductResponse {
     private String sellerName;
     private double sellerRating;
     private double averageRating;
+    private int reviewCount;
     private String status;
     private List<ReviewResponse> reviews;
 
@@ -41,6 +42,7 @@ public class ProductResponse {
                 .sellerName(product.getSellerName())
                 .sellerRating(product.getSellerRating())
                 .averageRating(product.getAverageRating())
+                .reviewCount(product.getReviews() != null ? product.getReviews().size() : 0)
                 .status(product.getStatus() != null ? product.getStatus().name() : null)
                 .reviews(product.getReviews() != null 
                         ? product.getReviews().stream().map(ReviewResponse::fromEntity).collect(Collectors.toList())

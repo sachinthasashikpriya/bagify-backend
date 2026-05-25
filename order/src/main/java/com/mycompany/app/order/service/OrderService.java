@@ -247,4 +247,11 @@ public class OrderService {
 
         return OrderResponse.fromEntity(saved);
     }
+
+    /** Checks if a buyer has a DELIVERED order item for a specific product. */
+    @Transactional(readOnly = true)
+    public boolean hasPurchased(Integer buyerId, Long productId) {
+        return orderItemRepository.existsByOrderBuyerIdAndProductIdAndItemStatus(
+                buyerId, productId, OrderItem.ItemStatus.DELIVERED);
+    }
 }

@@ -11,6 +11,8 @@ import lombok.*;
 public class ReviewResponse {
     private String id;
     private String productId;
+    private String productName;
+    private String productImage;
     private String buyerId;
     private String buyerName;
     private int rating;
@@ -22,6 +24,8 @@ public class ReviewResponse {
         return ReviewResponse.builder()
                 .id(review.getId() != null ? review.getId().toString() : null)
                 .productId(review.getProduct() != null && review.getProduct().getId() != null ? review.getProduct().getId().toString() : null)
+                .productName(review.getProduct() != null ? review.getProduct().getName() : null)
+                .productImage(review.getProduct() != null ? review.getProduct().getImage() : null)
                 .buyerId(review.getBuyerId())
                 .buyerName(review.getBuyerName())
                 .rating(review.getRating())

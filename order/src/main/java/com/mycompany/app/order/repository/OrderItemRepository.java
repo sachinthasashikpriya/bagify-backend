@@ -10,4 +10,7 @@ import java.util.List;
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     /** Find all items owned by a specific seller across all orders. */
     List<OrderItem> findBySellerId(String sellerId);
+
+    /** Check if a buyer has purchased a product with a specific item status */
+    boolean existsByOrderBuyerIdAndProductIdAndItemStatus(Integer buyerId, Long productId, OrderItem.ItemStatus itemStatus);
 }
