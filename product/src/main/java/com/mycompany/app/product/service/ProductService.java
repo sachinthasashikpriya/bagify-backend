@@ -157,6 +157,11 @@ public class ProductService {
         return productRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<Product> getProductsBySellerId(String sellerId) {
+        return productRepository.findBySellerId(sellerId);
+    }
+
     @Transactional
     public Product createProduct(Product product) {
         product.calculateAverageRating();

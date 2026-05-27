@@ -2,6 +2,7 @@ package com.mycompany.app.order.controller;
 
 import com.mycompany.app.order.dto.CheckoutRequest;
 import com.mycompany.app.order.dto.OrderResponse;
+import com.mycompany.app.order.dto.SellerStatsResponse;
 import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.service.OrderService;
@@ -69,6 +70,20 @@ public class OrderController {
     public ResponseEntity<List<OrderResponse>> getSellerOrders(Authentication authentication) {
         Integer sellerId = (Integer) authentication.getDetails();
         return ResponseEntity.ok(orderService.getOrdersBySeller(sellerId));
+    }
+
+    /**
+     * GET /api/v1/orders/seller/stats
+     * Returns the authenticated seller's revenue and item sold stats.
+     */
+    @GetMapping("/seller/stats")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<SellerStatsResponse> getSellerStats(Authentication authentication) {
+        Integer sellerId = (Integer) authentication.getDetails();
+        if (sellerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(orderService.getSellerStats(sellerId));
     }
 
     /**

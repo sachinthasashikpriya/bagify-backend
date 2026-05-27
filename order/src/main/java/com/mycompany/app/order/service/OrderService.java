@@ -3,6 +3,7 @@ package com.mycompany.app.order.service;
 import com.mycompany.app.order.dto.CheckoutRequest;
 import com.mycompany.app.order.dto.OrderResponse;
 import com.mycompany.app.order.dto.ProductDto;
+import com.mycompany.app.order.dto.SellerStatsResponse;
 import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.repository.OrderItemRepository;
@@ -253,5 +254,22 @@ public class OrderService {
     public boolean hasPurchased(Integer buyerId, Long productId) {
         return orderItemRepository.existsByOrderBuyerIdAndProductIdAndItemStatus(
                 buyerId, productId, OrderItem.ItemStatus.DELIVERED);
+    }
+
+    /** Computes total revenue and items sold statistics for a seller. */
+    @Transactional(readOnly = true)
+    public SellerStatsResponse getSellerStats(Integer sellerId) {
+        List<OrderItem> deliveredItems = orderItemRepository.findBySellerIdAndItemStatus(
+                String.valueOf(sellerId), OrderItem.ItemStatus.DELIVERED);
+
+        double totalRevenue = deliveredItems.stream()
+                .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
+                .sum();
+
+        int totalItemsSold = deliveredItems.stream()
+                .mapToInt(OrderItem::getQuantity)
+                .sum();
+
+        return new SellerStatsResponse(totalRevenue, totalItemsSold);
     }
 }

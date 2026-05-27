@@ -51,6 +51,18 @@ public class ProductController {
 
     // ─── Seller endpoints ────────────────────────────────────────────────────────
 
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<List<ProductResponse>> getMyProducts(Authentication authentication) {
+        Integer userId = (Integer) authentication.getDetails();
+        String sellerId = userId != null ? userId.toString() : "unknown";
+        List<ProductResponse> responses = productService.getProductsBySellerId(sellerId)
+                .stream()
+                .map(ProductResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
+
     /**
      * Create a product.
      * Uses ProductRequest DTO — prevents mass-assignment (client cannot set sellerId or averageRating).

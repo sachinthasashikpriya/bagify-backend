@@ -17,7 +17,7 @@ spring:
         - id: user-service
           uri: lb://user
           predicates:
-            - Path=/api/v1/users/**, /api/v1/cart/**, /api/v1/wishlist/**
+            - Path=/api/v1/users/**, /api/v1/cart/**, /api/v1/wishlist/**, /api/v1/admin/**
 
         # ── Product routes ──────────────────────────────────────────────────────
         - id: product-service
@@ -32,7 +32,7 @@ spring:
         - id: order-service
           uri: lb://order
           predicates:
-            - Path=/api/v1/orders/**
+            - Path=/api/v1/orders/seller/stats, /api/v1/orders/**
 
         # notification /internal/** routes are intentionally NOT listed here
         # — they are unreachable from the internet (internal only)
