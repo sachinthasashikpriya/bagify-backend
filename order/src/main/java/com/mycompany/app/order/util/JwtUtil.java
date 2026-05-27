@@ -18,13 +18,24 @@ import java.util.function.Function;
  */
 @Component
 public class JwtUtil {
-
+ 
     private final SecretKey key;
-
+ 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    public String generateSystemToken() {
+        return Jwts.builder()
+                .setSubject("SYSTEM")
+                .claim("userId", 0)
+                .claim("role", "ROLE_SYSTEM")
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 600000)) // 10 minutes
+                .signWith(key)
+                .compact();
+    }
+ 
     public boolean isTokenValid(String token, String email) {
         final String extractedEmail = extractEmail(token);
         return extractedEmail.equals(email) && !isTokenExpired(token);

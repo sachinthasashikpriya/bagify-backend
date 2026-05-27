@@ -12,4 +12,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT o FROM Order o JOIN o.items i WHERE i.sellerId = :sellerId ORDER BY o.createdAt DESC")
     List<Order> findBySellerIdOrderByCreatedAtDesc(@org.springframework.data.repository.query.Param("sellerId") String sellerId);
+
+    List<Order> findByStatusAndPaymentStatusAndCreatedAtBefore(
+            Order.OrderStatus status,
+            String paymentStatus,
+            java.time.LocalDateTime dateTime
+    );
 }
