@@ -18,6 +18,8 @@ public class OrderResponse {
     private String status;
     private Double totalAmount;
     private String shippingAddress;
+    private String paymentStatus;
+    private String paymentId;
     private LocalDateTime createdAt;
     private List<OrderItemDto> items;
 
@@ -28,6 +30,8 @@ public class OrderResponse {
                 .status(order.getStatus().name())
                 .totalAmount(order.getTotalAmount())
                 .shippingAddress(order.getShippingAddress())
+                .paymentStatus(order.getPaymentStatus())
+                .paymentId(order.getPaymentId())
                 .createdAt(order.getCreatedAt())
                 .items(order.getItems().stream()
                         .map(OrderItemDto::fromEntity)

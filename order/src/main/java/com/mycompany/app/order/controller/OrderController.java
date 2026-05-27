@@ -2,12 +2,14 @@ package com.mycompany.app.order.controller;
 
 import com.mycompany.app.order.dto.CheckoutRequest;
 import com.mycompany.app.order.dto.OrderResponse;
+import com.mycompany.app.order.dto.PayHereParamsResponse;
 import com.mycompany.app.order.dto.SellerStatsResponse;
 import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -199,5 +201,36 @@ public class OrderController {
             Authentication authentication) {
         Integer buyerId = (Integer) authentication.getDetails();
         return ResponseEntity.ok(orderService.hasPurchased(buyerId, productId));
+    }
+
+    /**
+     * GET /api/v1/orders/{id}/payment-params
+     * Returns the PayHere Sandbox payment parameters (including generated MD5 signature hash)
+     * for initiating a checkout payment. Restricted to the owning BUYER.
+     */
+    @GetMapping("/{id}/payment-params")
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<PayHereParamsResponse> getPaymentParams(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Integer buyerId = (Integer) authentication.getDetails();
+        if (buyerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        PayHereParamsResponse response = orderService.getPaymentParams(id, buyerId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /api/v1/orders/payment/notify
+     * Server-to-server webhook notification callback from PayHere.
+     * Consumes application/x-www-form-urlencoded params. Publicly accessible.
+     */
+    @PostMapping(value = "/payment/notify", consumes = org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<String> handlePaymentNotification(@RequestParam Map<String, String> params) {
+        orderService.processPaymentNotification(params);
+        return ResponseEntity.ok("Notification Processed Successfully");
     }
 }

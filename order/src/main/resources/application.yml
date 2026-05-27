@@ -31,3 +31,9 @@ jwt:
   expiration-ms: 900000
   refresh-expiration-ms: 604800000
 
+payhere:
+  merchant-id: ${PAYHERE_MERCHANT_ID:1235988}
+  merchant-secret: ${PAYHERE_MERCHANT_SECRET:MzI2OTAwOTA4NDM2NDMxOTMyOTIxMTAzNDY4ODExMTIzNDUxNzkwNg==}
+  sandbox: true
+  currency: LKR
+

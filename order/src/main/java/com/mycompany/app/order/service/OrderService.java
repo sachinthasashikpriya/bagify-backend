@@ -8,6 +8,9 @@ import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.repository.OrderItemRepository;
 import com.mycompany.app.order.repository.OrderRepository;
+import com.mycompany.app.order.dto.PayHereParamsResponse;
+import com.mycompany.app.order.util.PayHereSignatureGenerator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,18 @@ import java.util.List;
 
 @Service
 public class OrderService {
+
+    @Value("${payhere.merchant-id}")
+    private String merchantId;
+
+    @Value("${payhere.merchant-secret}")
+    private String merchantSecret;
+
+    @Value("${payhere.sandbox}")
+    private boolean sandbox;
+
+    @Value("${payhere.currency}")
+    private String currency;
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -271,5 +286,117 @@ public class OrderService {
                 .sum();
 
         return new SellerStatsResponse(totalRevenue, totalItemsSold);
+    }
+
+    /**
+     * Retrieves PayHere parameters and calculated signature hash for a specific order.
+     */
+    @Transactional(readOnly = true)
+    public PayHereParamsResponse getPaymentParams(Long orderId, Integer buyerId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (!order.getBuyerId().equals(buyerId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: you are not the owner of this order");
+        }
+
+        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot pay for a cancelled order");
+        }
+
+        // Format amount precisely to 2 decimal places (using US locale to ensure dot decimal separator)
+        String formattedAmount = String.format(java.util.Locale.US, "%.2f", order.getTotalAmount());
+
+        // Generate the MD5 hash signature
+        String hash = PayHereSignatureGenerator.generateCheckoutHash(
+                merchantId,
+                String.valueOf(orderId),
+                formattedAmount,
+                currency,
+                merchantSecret
+        );
+
+        return PayHereParamsResponse.builder()
+                .merchantId(merchantId)
+                .orderId(String.valueOf(orderId))
+                .amount(formattedAmount)
+                .currency(currency)
+                .hash(hash)
+                .sandbox(sandbox)
+                .build();
+    }
+
+    /**
+     * Processes server-to-server webhook notification callback from PayHere.
+     */
+    @Transactional
+    public void processPaymentNotification(java.util.Map<String, String> params) {
+        String receivedMerchantId = params.get("merchant_id");
+        String receivedOrderIdStr = params.get("order_id");
+        String receivedAmountStr = params.get("payhere_amount");
+        String receivedCurrency = params.get("payhere_currency");
+        String receivedStatusCode = params.get("status_code");
+        String receivedMd5sig = params.get("md5sig");
+        String receivedPaymentId = params.get("payment_id");
+
+        if (receivedMerchantId == null || receivedOrderIdStr == null || receivedAmountStr == null 
+                || receivedCurrency == null || receivedStatusCode == null || receivedMd5sig == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing required PayHere parameters");
+        }
+
+        // 1. Verify that the request is authentic by matching signatures
+        String calculatedMd5sig = PayHereSignatureGenerator.generateNotificationHash(
+                receivedMerchantId,
+                receivedOrderIdStr,
+                receivedAmountStr,
+                receivedCurrency,
+                receivedStatusCode,
+                merchantSecret
+        );
+
+        if (!calculatedMd5sig.equalsIgnoreCase(receivedMd5sig)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid signature verification failed");
+        }
+
+        // 2. Fetch the corresponding order
+        Long orderId;
+        try {
+            orderId = Long.parseLong(receivedOrderIdStr);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order ID format");
+        }
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        // 3. Process payment status
+        if ("2".equals(receivedStatusCode)) {
+            // Payment success: transition order paymentStatus to PAID and overall status to PROCESSING
+            order.setPaymentStatus("PAID");
+            order.setPaymentId(receivedPaymentId);
+            
+            // Only update status to PROCESSING if it's currently PENDING
+            if (order.getStatus() == Order.OrderStatus.PENDING) {
+                order.setStatus(Order.OrderStatus.PROCESSING);
+                
+                // Also update individual item statuses to PROCESSING so sellers know payment is received
+                if (order.getItems() != null) {
+                    for (OrderItem item : order.getItems()) {
+                        if (item.getItemStatus() == OrderItem.ItemStatus.PENDING) {
+                            item.setItemStatus(OrderItem.ItemStatus.PROCESSING);
+                        }
+                    }
+                }
+            }
+            orderRepository.save(order);
+        } else if ("0".equals(receivedStatusCode)) {
+            // Payment pending
+            order.setPaymentStatus("PENDING");
+            orderRepository.save(order);
+        } else {
+            // Payment failed or declined (status_code < 0)
+            order.setPaymentStatus("FAILED");
+            orderRepository.save(order);
+        }
     }
 }

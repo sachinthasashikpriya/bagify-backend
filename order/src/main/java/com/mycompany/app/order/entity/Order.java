@@ -43,6 +43,12 @@ public class Order {
     @Column(nullable = false)
     private String shippingAddress;
 
+    @Column(name = "payment_status")
+    private String paymentStatus = "UNPAID";
+
+    @Column(name = "payment_id")
+    private String paymentId;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
