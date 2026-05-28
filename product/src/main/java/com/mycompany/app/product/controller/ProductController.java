@@ -6,6 +6,7 @@ import com.mycompany.app.product.dto.ReviewRequest;
 import com.mycompany.app.product.entity.Product;
 import com.mycompany.app.product.entity.Review;
 import com.mycompany.app.product.service.ProductService;
+import com.mycompany.app.product.service.UserClient;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +24,11 @@ import java.util.stream.Collectors;
 public class ProductController {
 
     private final ProductService productService;
+    private final UserClient userClient;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, UserClient userClient) {
         this.productService = productService;
+        this.userClient = userClient;
     }
 
     // ─── Public endpoints ───────────────────────────────────────────────────────
@@ -34,17 +37,14 @@ public class ProductController {
     public ResponseEntity<List<ProductResponse>> getAllProducts(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String search) {
-        List<ProductResponse> responses = productService.getAllProducts(category, search)
-                .stream()
-                .map(ProductResponse::fromEntity)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        List<Product> products = productService.getAllProducts(category, search);
+        return ResponseEntity.ok(mapToResponses(products));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
         return productService.getProductById(id)
-                .map(ProductResponse::fromEntity)
+                .map(this::mapToResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -56,11 +56,8 @@ public class ProductController {
     public ResponseEntity<List<ProductResponse>> getMyProducts(Authentication authentication) {
         Integer userId = (Integer) authentication.getDetails();
         String sellerId = userId != null ? userId.toString() : "unknown";
-        List<ProductResponse> responses = productService.getProductsBySellerId(sellerId)
-                .stream()
-                .map(ProductResponse::fromEntity)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        List<Product> products = productService.getProductsBySellerId(sellerId);
+        return ResponseEntity.ok(mapToResponses(products));
     }
 
     /**
@@ -90,7 +87,7 @@ public class ProductController {
         product.setStatus(Product.ProductStatus.ACTIVE);
 
         Product created = productService.createProduct(product);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ProductResponse.fromEntity(created));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(created));
     }
 
     /**
@@ -114,7 +111,7 @@ public class ProductController {
         updates.setImage(request.getImage());
 
         return productService.updateProduct(id, updates, authentication)
-                .map(ProductResponse::fromEntity)
+                .map(this::mapToResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -152,7 +149,7 @@ public class ProductController {
         review.setDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
         return productService.addReview(id, review)
-                .map(ProductResponse::fromEntity)
+                .map(this::mapToResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -189,5 +186,56 @@ public class ProductController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+
+    // ─── Private mapping helpers ────────────────────────────────────────────────
+
+    private ProductResponse mapToResponse(Product product) {
+        if (product == null) return null;
+        ProductResponse response = ProductResponse.fromEntity(product);
+        String sellerId = product.getSellerId();
+        if (sellerId != null && sellerId.matches("\\d+")) {
+            java.util.Map<Integer, Boolean> verifiedMap = userClient.getBatchVerifiedSellers(
+                    java.util.Collections.singletonList(Integer.parseInt(sellerId))
+            );
+            response.setSellerVerified(verifiedMap.getOrDefault(Integer.parseInt(sellerId), false));
+        } else {
+            response.setSellerVerified(false);
+        }
+        return response;
+    }
+
+    private List<ProductResponse> mapToResponses(List<Product> products) {
+        if (products == null) return java.util.Collections.emptyList();
+        
+        List<ProductResponse> responses = products.stream()
+                .map(ProductResponse::fromEntity)
+                .collect(Collectors.toList());
+
+        List<Integer> numericSellerIds = products.stream()
+                .map(Product::getSellerId)
+                .filter(java.util.Objects::nonNull)
+                .filter(id -> id.matches("\\d+"))
+                .map(Integer::parseInt)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!numericSellerIds.isEmpty()) {
+            java.util.Map<Integer, Boolean> verifiedMap = userClient.getBatchVerifiedSellers(numericSellerIds);
+            for (ProductResponse response : responses) {
+                String sellerId = response.getSellerId();
+                if (sellerId != null && sellerId.matches("\\d+")) {
+                    response.setSellerVerified(verifiedMap.getOrDefault(Integer.parseInt(sellerId), false));
+                } else {
+                    response.setSellerVerified(false);
+                }
+            }
+        } else {
+            for (ProductResponse response : responses) {
+                response.setSellerVerified(false);
+            }
+        }
+
+        return responses;
     }
 }

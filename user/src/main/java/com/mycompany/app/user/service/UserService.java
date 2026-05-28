@@ -404,4 +404,20 @@ public class UserService {
         Seller updatedSeller = sellerRepository.save(seller);
         return mapToProfileResponse(updatedSeller);
     }
+
+    public java.util.Map<Integer, Boolean> getBatchVerifiedSellers(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return java.util.Collections.emptyMap();
+        }
+        List<Seller> sellers = sellerRepository.findAllById(ids);
+        java.util.Map<Integer, Boolean> result = new java.util.HashMap<>();
+        for (Integer id : ids) {
+            result.put(id, false);
+        }
+        for (Seller s : sellers) {
+            result.put(s.getId(), s.getVerificationStatus() == Seller.VerificationStatus.APPROVED);
+        }
+        return result;
+    }
 }
+

@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/forgot-password",
                                 "/api/v1/auth/reset-password",
+                                "/api/v1/users/sellers/batch-verified",
                                 "/error"
                         ).permitAll() // ✅ public
                         .anyRequest().authenticated()                                   // ✅ everything else needs JWT

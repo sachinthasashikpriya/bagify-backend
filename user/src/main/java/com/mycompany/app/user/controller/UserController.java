@@ -118,6 +118,14 @@ public class UserController {
     }
 
     /**
+     * Public batch-verified endpoint to check verification status of multiple sellers.
+     */
+    @GetMapping("/sellers/batch-verified")
+    public ResponseEntity<java.util.Map<Integer, Boolean>> getBatchVerifiedSellers(@RequestParam List<Integer> ids) {
+        return ResponseEntity.ok(userService.getBatchVerifiedSellers(ids));
+    }
+
+    /**
      * Returns minimal buyer info (name, email, address) for the order service.
      * Called by the order service to fetch the buyer's shipping address at checkout.
      * Requires authentication to prevent public data exposure.

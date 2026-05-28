@@ -23,6 +23,7 @@ public class ProductResponse {
     private String sellerId;
     private String sellerName;
     private double sellerRating;
+    private boolean sellerVerified;
     private double averageRating;
     private int reviewCount;
     private String status;
