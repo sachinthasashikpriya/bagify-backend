@@ -141,7 +141,9 @@ public class UserService {
                     seller.getBrCertificateUrl(),
                     seller.getRejectionReason(),
                     seller.getSubmittedAt(),
-                    seller.getReviewedAt()
+                    seller.getReviewedAt(),
+                    seller.getItemsSold(),
+                    seller.getRevenue()
             );
         }
         return new UserProfileResponse(
@@ -418,6 +420,24 @@ public class UserService {
             result.put(s.getId(), s.getVerificationStatus() == Seller.VerificationStatus.APPROVED);
         }
         return result;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void updateSellerStats(Integer sellerId, double revenueDelta, int itemsSoldDelta) {
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
+        
+        if (seller.getItemsSold() == null) {
+            seller.setItemsSold(0);
+        }
+        if (seller.getRevenue() == null) {
+            seller.setRevenue(java.math.BigDecimal.ZERO);
+        }
+        
+        seller.setItemsSold(seller.getItemsSold() + itemsSoldDelta);
+        seller.setRevenue(seller.getRevenue().add(java.math.BigDecimal.valueOf(revenueDelta)));
+        
+        sellerRepository.save(seller);
     }
 }
 

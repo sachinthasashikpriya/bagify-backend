@@ -37,11 +37,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductClient productClient;
+    private final UserClient userClient;
 
-    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductClient productClient) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductClient productClient, UserClient userClient) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productClient = productClient;
+        this.userClient = userClient;
     }
 
     /**
@@ -274,14 +276,17 @@ public class OrderService {
     /** Computes total revenue and items sold statistics for a seller. */
     @Transactional(readOnly = true)
     public SellerStatsResponse getSellerStats(Integer sellerId) {
-        List<OrderItem> deliveredItems = orderItemRepository.findBySellerIdAndItemStatus(
-                String.valueOf(sellerId), OrderItem.ItemStatus.DELIVERED);
+        List<OrderItem> sellerItems = orderItemRepository.findBySellerId(String.valueOf(sellerId));
 
-        double totalRevenue = deliveredItems.stream()
+        List<OrderItem> soldItems = sellerItems.stream()
+                .filter(item -> "PAID".equals(item.getOrder().getPaymentStatus()) && item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+                .toList();
+
+        double totalRevenue = soldItems.stream()
                 .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
                 .sum();
 
-        int totalItemsSold = deliveredItems.stream()
+        int totalItemsSold = soldItems.stream()
                 .mapToInt(OrderItem::getQuantity)
                 .sum();
 
@@ -372,6 +377,7 @@ public class OrderService {
         // 3. Process payment status
         if ("2".equals(receivedStatusCode)) {
             // Payment success: transition order paymentStatus to PAID and overall status to PROCESSING
+            boolean isAlreadyPaid = "PAID".equals(order.getPaymentStatus());
             order.setPaymentStatus("PAID");
             order.setPaymentId(receivedPaymentId);
             
@@ -389,6 +395,22 @@ public class OrderService {
                 }
             }
             orderRepository.save(order);
+
+            // Update seller stats in user microservice if order wasn't paid already
+            if (!isAlreadyPaid) {
+                if (order.getItems() != null) {
+                    for (OrderItem item : order.getItems()) {
+                        try {
+                            Integer sellerId = Integer.parseInt(item.getSellerId());
+                            double itemRevenue = item.getPriceAtPurchase() * item.getQuantity();
+                            int itemQuantity = item.getQuantity();
+                            userClient.updateSellerStats(sellerId, itemRevenue, itemQuantity);
+                        } catch (Exception e) {
+                            System.err.println("Could not parse seller ID or call UserClient: " + e.getMessage());
+                        }
+                    }
+                }
+            }
         } else if ("0".equals(receivedStatusCode)) {
             // Payment pending
             order.setPaymentStatus("PENDING");

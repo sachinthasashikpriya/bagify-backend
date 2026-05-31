@@ -138,4 +138,14 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/sellers/{id}/stats")
+    public ResponseEntity<Void> updateSellerStats(
+            @PathVariable Integer id,
+            @RequestParam double revenueDelta,
+            @RequestParam int itemsSoldDelta
+    ) {
+        userService.updateSellerStats(id, revenueDelta, itemsSoldDelta);
+        return ResponseEntity.ok().build();
+    }
+
 }

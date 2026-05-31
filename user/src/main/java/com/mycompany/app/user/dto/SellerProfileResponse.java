@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -19,9 +20,12 @@ public class SellerProfileResponse extends UserProfileResponse {
     private String rejectionReason;
     private LocalDateTime submittedAt;
     private LocalDateTime reviewedAt;
+    private Integer itemsSold;
+    private BigDecimal revenue;
 
     public SellerProfileResponse(Integer id, String name, String email, String phone, String address, String role, String profileImageUrl, LocalDateTime createdAt,
-                                 VerificationStatus verificationStatus, String businessName, String registrationNumber, String nicImageUrl, String brCertificateUrl, String rejectionReason, LocalDateTime submittedAt, LocalDateTime reviewedAt) {
+                                 VerificationStatus verificationStatus, String businessName, String registrationNumber, String nicImageUrl, String brCertificateUrl, String rejectionReason, LocalDateTime submittedAt, LocalDateTime reviewedAt,
+                                 Integer itemsSold, BigDecimal revenue) {
         super(id, name, email, phone, address, role, profileImageUrl, createdAt);
         this.verificationStatus = verificationStatus;
         this.businessName = businessName;
@@ -31,5 +35,7 @@ public class SellerProfileResponse extends UserProfileResponse {
         this.rejectionReason = rejectionReason;
         this.submittedAt = submittedAt;
         this.reviewedAt = reviewedAt;
+        this.itemsSold = itemsSold;
+        this.revenue = revenue;
     }
 }
