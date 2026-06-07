@@ -95,7 +95,10 @@ public class UserService {
     }
 
     public AuthResponse refreshToken(TokenRefreshRequest request) {
-        String refreshToken = request.getRefreshToken();
+        return refreshToken(request.getRefreshToken());
+    }
+
+    public AuthResponse refreshToken(String refreshToken) {
         String email = jwtUtil.extractEmail(refreshToken);
 
         User user = userRepository.findByEmail(email)

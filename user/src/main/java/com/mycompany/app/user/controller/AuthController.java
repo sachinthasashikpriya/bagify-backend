@@ -14,6 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -29,15 +33,63 @@ public class AuthController {
         return ResponseEntity.ok(userService.mapToProfileResponse(user));
     }
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         AuthResponse authResponse = userService.authenticate(loginRequest);
-        return ResponseEntity.ok(authResponse);
+        
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/v1/auth")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(new AuthResponse(authResponse.getToken(), null, authResponse.getUser()));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestBody TokenRefreshRequest refreshRequest) {
-        AuthResponse authResponse = userService.refreshToken(refreshRequest);
-        return ResponseEntity.ok(authResponse);
+    public ResponseEntity<AuthResponse> refresh(
+            @CookieValue(name = "refresh_token", required = false) String refreshTokenFromCookie,
+            @RequestBody(required = false) TokenRefreshRequest refreshRequest,
+            HttpServletResponse response
+    ) {
+        String tokenToUse = refreshTokenFromCookie;
+        if (tokenToUse == null || tokenToUse.isBlank()) {
+            if (refreshRequest != null) {
+                tokenToUse = refreshRequest.getRefreshToken();
+            }
+        }
+
+        if (tokenToUse == null || tokenToUse.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        AuthResponse authResponse = userService.refreshToken(tokenToUse);
+        
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/v1/auth")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(new AuthResponse(authResponse.getToken(), null, authResponse.getUser()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/v1/auth")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/forgot-password")
