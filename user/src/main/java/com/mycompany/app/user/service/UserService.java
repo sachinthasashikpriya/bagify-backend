@@ -9,7 +9,8 @@ import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.repository.BuyerRepository;
 import com.mycompany.app.user.repository.SellerRepository;
 import com.mycompany.app.user.repository.UserRepository;
-import com.mycompany.app.user.repository.SellerRepository;
+import com.mycompany.app.user.repository.CartRepository;
+import com.mycompany.app.user.repository.WishlistRepository;
 import com.mycompany.app.user.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,8 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final EmailService emailService;
     private final BuyerRepository buyerRepository;
+    private final CartRepository cartRepository;
+    private final WishlistRepository wishlistRepository;
 
     public User register(RegisterRequest registerRequest) {
 
@@ -55,6 +58,8 @@ public class UserService {
             buyer.setName(registerRequest.getName());
             buyer.setEmail(registerRequest.getEmail());
             buyer.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+            buyer.setPhone(registerRequest.getPhone());
+            buyer.setAddress(registerRequest.getAddress());
             buyer.setRole(role);
 
             return userRepository.save(buyer);
@@ -66,6 +71,8 @@ public class UserService {
             seller.setName(registerRequest.getName());
             seller.setEmail(registerRequest.getEmail());
             seller.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+            seller.setPhone(registerRequest.getPhone());
+            seller.setAddress(registerRequest.getAddress());
             seller.setRole(role);
 
             return userRepository.save(seller);
@@ -314,6 +321,11 @@ public class UserService {
         // Note: Detailed OrderRepository checks are currently omitted as the Order 
         // service logic is not present in this module.
         
+        if (user instanceof Buyer) {
+            cartRepository.findByBuyerId(userId).ifPresent(cartRepository::delete);
+            wishlistRepository.findByBuyerId(userId).ifPresent(wishlistRepository::delete);
+        }
+
         userRepository.delete(user);
         System.out.println("✅ Account deleted successfully");
     }
