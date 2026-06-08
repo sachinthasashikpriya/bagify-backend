@@ -18,4 +18,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             String paymentStatus,
             java.time.LocalDateTime dateTime
     );
+
+    boolean existsByBuyerIdAndStatusIn(Integer buyerId, java.util.Collection<Order.OrderStatus> statuses);
 }

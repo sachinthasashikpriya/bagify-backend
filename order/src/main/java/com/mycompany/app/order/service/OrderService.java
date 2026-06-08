@@ -421,4 +421,24 @@ public class OrderService {
             orderRepository.save(order);
         }
     }
+
+    @Transactional(readOnly = true)
+    public boolean hasActiveOrdersForBuyer(Integer buyerId) {
+        List<Order.OrderStatus> activeStatuses = List.of(
+                Order.OrderStatus.PENDING,
+                Order.OrderStatus.PROCESSING,
+                Order.OrderStatus.PARTIALLY_SHIPPED,
+                Order.OrderStatus.SHIPPED
+        );
+        return orderRepository.existsByBuyerIdAndStatusIn(buyerId, activeStatuses);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasActiveDeliveriesForSeller(Integer sellerId) {
+        return orderItemRepository.existsActiveDeliveriesBySellerId(
+                String.valueOf(sellerId),
+                OrderItem.ItemStatus.DELIVERED,
+                Order.OrderStatus.CANCELLED
+        );
+    }
 }

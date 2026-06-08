@@ -233,4 +233,32 @@ public class OrderController {
         orderService.processPaymentNotification(params);
         return ResponseEntity.ok("Notification Processed Successfully");
     }
+
+    /**
+     * GET /api/v1/orders/buyer/has-active
+     * Checks if the authenticated buyer has any ongoing (active) orders.
+     */
+    @GetMapping("/buyer/has-active")
+    @PreAuthorize("hasRole('BUYER')")
+    public ResponseEntity<Boolean> hasActiveOrders(Authentication authentication) {
+        Integer buyerId = (Integer) authentication.getDetails();
+        if (buyerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(orderService.hasActiveOrdersForBuyer(buyerId));
+    }
+
+    /**
+     * GET /api/v1/orders/seller/has-active
+     * Checks if the authenticated seller has any ongoing (active) deliveries.
+     */
+    @GetMapping("/seller/has-active")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<Boolean> hasActiveDeliveries(Authentication authentication) {
+        Integer sellerId = (Integer) authentication.getDetails();
+        if (sellerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(orderService.hasActiveDeliveriesForSeller(sellerId));
+    }
 }

@@ -31,6 +31,7 @@ public class UserService {
     private final BuyerRepository buyerRepository;
     private final CartRepository cartRepository;
     private final WishlistRepository wishlistRepository;
+    private final com.mycompany.app.user.client.OrderClient orderClient;
 
     public User register(RegisterRequest registerRequest) {
 
@@ -309,21 +310,21 @@ public class UserService {
     }
 
     @org.springframework.transaction.annotation.Transactional
-    public void deleteAccount(Integer userId) {
+    public void deleteAccount(Integer userId, String bearerToken) {
         System.out.println("🗑 Deleting account for user ID: " + userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Rules:
-        // Buyer can delete only if they have no ongoing orders (status not PENDING or SHIPPED)
-        // Seller can delete only if they have no ongoing deliveries (no active products with pending orders)
-        
-        // Note: Detailed OrderRepository checks are currently omitted as the Order 
-        // service logic is not present in this module.
-        
         if (user instanceof Buyer) {
+            if (orderClient.hasActiveOrders(bearerToken)) {
+                throw new IllegalStateException("Cannot delete account: You have ongoing orders that are not yet delivered or cancelled.");
+            }
             cartRepository.findByBuyerId(userId).ifPresent(cartRepository::delete);
             wishlistRepository.findByBuyerId(userId).ifPresent(wishlistRepository::delete);
+        } else if (user instanceof Seller) {
+            if (orderClient.hasActiveDeliveries(bearerToken)) {
+                throw new IllegalStateException("Cannot delete account: You have ongoing deliveries. Please fulfill or cancel them first.");
+            }
         }
 
         userRepository.delete(user);

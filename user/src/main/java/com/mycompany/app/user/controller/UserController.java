@@ -86,9 +86,13 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteAccount(Authentication authentication) {
+    public ResponseEntity<Void> deleteAccount(
+            Authentication authentication,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
         Integer userId = (Integer) ((UsernamePasswordAuthenticationToken) authentication).getDetails();
-        userService.deleteAccount(userId);
+        String bearerToken = request.getHeader("Authorization");
+        userService.deleteAccount(userId, bearerToken);
         return ResponseEntity.noContent().build();
     }
 
