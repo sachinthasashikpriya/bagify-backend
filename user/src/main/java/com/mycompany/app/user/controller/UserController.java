@@ -62,8 +62,12 @@ public class UserController {
     //Admin: disable user
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/disable")
-    public ResponseEntity<String> disableUser(@PathVariable int id) {
-        userService.disableUser(id);
+    public ResponseEntity<String> disableUser(
+            @PathVariable int id,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        String bearerToken = request.getHeader("Authorization");
+        userService.disableUser(id, bearerToken);
         return ResponseEntity.ok("User disabled successfully");
     }
 

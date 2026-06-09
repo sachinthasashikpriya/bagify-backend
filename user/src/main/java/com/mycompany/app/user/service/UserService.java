@@ -233,8 +233,18 @@ public class UserService {
         return mapToProfileResponse(user);
     }
 
-    public void disableUser(int id) {
+    public void disableUser(int id, String bearerToken) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Invalid user"));
+
+        if (user instanceof Buyer) {
+            if (orderClient.hasActiveOrdersForSpecificUser(user.getId(), "BUYER", bearerToken)) {
+                throw new IllegalStateException("Cannot disable account: This buyer has ongoing orders that are not yet delivered or cancelled.");
+            }
+        } else if (user instanceof Seller) {
+            if (orderClient.hasActiveOrdersForSpecificUser(user.getId(), "SELLER", bearerToken)) {
+                throw new IllegalStateException("Cannot disable account: This seller has ongoing deliveries. Please fulfill or cancel them first.");
+            }
+        }
 
         user.setEnabled(false);
         userRepository.save(user);

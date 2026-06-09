@@ -261,4 +261,23 @@ public class OrderController {
         }
         return ResponseEntity.ok(orderService.hasActiveDeliveriesForSeller(sellerId));
     }
+
+    /**
+     * GET /api/v1/orders/users/{userId}/has-active
+     * Checks if a specific buyer or seller has ongoing orders or deliveries.
+     */
+    @GetMapping("/users/{userId}/has-active")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Boolean> hasActiveOrdersForUser(
+            @PathVariable Integer userId,
+            @RequestParam String role
+    ) {
+        boolean hasActive = false;
+        if ("BUYER".equalsIgnoreCase(role)) {
+            hasActive = orderService.hasActiveOrdersForBuyer(userId);
+        } else if ("SELLER".equalsIgnoreCase(role)) {
+            hasActive = orderService.hasActiveDeliveriesForSeller(userId);
+        }
+        return ResponseEntity.ok(hasActive);
+    }
 }

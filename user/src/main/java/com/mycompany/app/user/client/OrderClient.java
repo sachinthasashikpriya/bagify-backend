@@ -43,4 +43,19 @@ public class OrderClient {
                     "Error communicating with order service: " + e.getMessage());
         }
     }
+
+    public boolean hasActiveOrdersForSpecificUser(Integer userId, String role, String bearerToken) {
+        try {
+            Boolean result = webClient.get()
+                    .uri("/api/v1/orders/users/{userId}/has-active?role={role}", userId, role)
+                    .header("Authorization", bearerToken)
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+            return result != null && result;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error communicating with order service: " + e.getMessage());
+        }
+    }
 }
