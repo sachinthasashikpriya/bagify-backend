@@ -34,14 +34,19 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        String jwt = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } else {
+            jwt = request.getParameter("token");
+        }
 
         // No token → pass through (public endpoints permitted, secured ones will be rejected by Spring Security)
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        String jwt = authHeader.substring(7);
 
         try {
             String  email  = jwtUtil.extractEmail(jwt);

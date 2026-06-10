@@ -32,6 +32,7 @@ public class UserService {
     private final CartRepository cartRepository;
     private final WishlistRepository wishlistRepository;
     private final com.mycompany.app.user.client.OrderClient orderClient;
+    private final SseService sseService;
 
     public User register(RegisterRequest registerRequest) {
 
@@ -430,6 +431,10 @@ public class UserService {
 
         seller.setReviewedAt(java.time.LocalDateTime.now());
         Seller updatedSeller = sellerRepository.save(seller);
+
+        // Notify the seller in real-time via SSE
+        sseService.sendVerificationUpdate(sellerId, updatedSeller.getVerificationStatus().name());
+
         return mapToProfileResponse(updatedSeller);
     }
 
