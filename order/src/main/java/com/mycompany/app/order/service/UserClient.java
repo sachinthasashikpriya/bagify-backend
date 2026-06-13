@@ -1,5 +1,6 @@
 package com.mycompany.app.order.service;
 
+import com.mycompany.app.order.dto.BuyerInfoResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -14,6 +15,23 @@ public class UserClient {
 
     public UserClient(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl("http://USER").build();
+    }
+
+    /**
+     * Fetches buyer details by ID from the user service.
+     */
+    public BuyerInfoResponse getBuyerById(Integer buyerId, String bearerToken) {
+        try {
+            return webClient.get()
+                    .uri("/api/v1/users/buyers/{id}", buyerId)
+                    .header("Authorization", bearerToken)
+                    .retrieve()
+                    .bodyToMono(BuyerInfoResponse.class)
+                    .block();
+        } catch (Exception e) {
+            System.err.println("Failed to fetch buyer details for ID " + buyerId + ": " + e.getMessage());
+            return null;
+        }
     }
 
     /**

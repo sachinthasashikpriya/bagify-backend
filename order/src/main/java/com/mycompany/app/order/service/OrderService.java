@@ -9,6 +9,7 @@ import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.repository.OrderItemRepository;
 import com.mycompany.app.order.repository.OrderRepository;
 import com.mycompany.app.order.dto.PayHereParamsResponse;
+import com.mycompany.app.order.dto.BuyerInfoResponse;
 import com.mycompany.app.order.util.PayHereSignatureGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,9 @@ public class OrderService {
 
     @Value("${payhere.currency}")
     private String currency;
+
+    @Value("${payhere.notify-url}")
+    private String notifyUrl;
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -297,7 +301,7 @@ public class OrderService {
      * Retrieves PayHere parameters and calculated signature hash for a specific order.
      */
     @Transactional(readOnly = true)
-    public PayHereParamsResponse getPaymentParams(Long orderId, Integer buyerId) {
+    public PayHereParamsResponse getPaymentParams(Long orderId, Integer buyerId, String bearerToken, String returnUrl, String cancelUrl) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
@@ -321,13 +325,32 @@ public class OrderService {
                 merchantSecret
         );
 
+        // Fetch buyer profile details from the user microservice
+        BuyerInfoResponse buyer = userClient.getBuyerById(buyerId, bearerToken);
+        String name = buyer != null ? buyer.getName() : "Customer";
+        String email = buyer != null ? buyer.getEmail() : "";
+        String phone = (buyer != null && buyer.getPhone() != null) ? buyer.getPhone() : "0771234567";
+        String address = order.getShippingAddress() != null ? order.getShippingAddress() : 
+                         (buyer != null && buyer.getAddress() != null) ? buyer.getAddress() : "";
+
         return PayHereParamsResponse.builder()
+                .sandbox(sandbox)
                 .merchantId(merchantId)
+                .returnUrl(returnUrl)
+                .cancelUrl(cancelUrl)
+                .notifyUrl(notifyUrl)
                 .orderId(String.valueOf(orderId))
+                .items("Purchase Order #" + orderId)
                 .amount(formattedAmount)
                 .currency(currency)
                 .hash(hash)
-                .sandbox(sandbox)
+                .firstName(name)
+                .lastName("")
+                .email(email)
+                .phone(phone)
+                .address(address)
+                .city("Colombo")
+                .country("Sri Lanka")
                 .build();
     }
 

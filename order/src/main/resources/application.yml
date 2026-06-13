@@ -36,4 +36,5 @@ payhere:
   merchant-secret: ${PAYHERE_MERCHANT_SECRET:MzI2OTAwOTA4NDM2NDMxOTMyOTIxMTAzNDY4ODExMTIzNDUxNzkwNg==}
   sandbox: true
   currency: LKR
+  notify-url: ${PAYHERE_NOTIFY_URL:https://deduct-divisibly-itinerary.ngrok-free.dev/api/v1/orders/payment/notify}
 

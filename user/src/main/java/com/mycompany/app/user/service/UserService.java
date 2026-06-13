@@ -396,7 +396,8 @@ public class UserService {
                         (long) b.getId(),
                         b.getName(),
                         b.getEmail(),
-                        b.getAddress()
+                        b.getAddress(),
+                        b.getPhone()
                 ));
     }
 

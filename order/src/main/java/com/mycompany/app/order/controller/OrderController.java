@@ -212,14 +212,18 @@ public class OrderController {
     @PreAuthorize("hasRole('BUYER')")
     public ResponseEntity<PayHereParamsResponse> getPaymentParams(
             @PathVariable Long id,
-            Authentication authentication) {
+            @RequestParam String returnUrl,
+            @RequestParam String cancelUrl,
+            Authentication authentication,
+            HttpServletRequest request) {
 
         Integer buyerId = (Integer) authentication.getDetails();
         if (buyerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        PayHereParamsResponse response = orderService.getPaymentParams(id, buyerId);
+        String bearerToken = request.getHeader("Authorization");
+        PayHereParamsResponse response = orderService.getPaymentParams(id, buyerId, bearerToken, returnUrl, cancelUrl);
         return ResponseEntity.ok(response);
     }
 

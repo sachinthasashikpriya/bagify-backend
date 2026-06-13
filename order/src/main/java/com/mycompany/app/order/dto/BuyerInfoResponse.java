@@ -1,13 +1,13 @@
-package com.mycompany.app.user.dto;
+package com.mycompany.app.order.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-/**
- * Minimal buyer info exposed to other services (e.g. order service needs shipping address).
- * Only contains fields needed by consumers — not the full Buyer entity.
- */
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class BuyerInfoResponse {
     private Long id;
