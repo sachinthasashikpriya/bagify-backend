@@ -20,4 +20,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     );
 
     boolean existsByBuyerIdAndStatusIn(Integer buyerId, java.util.Collection<Order.OrderStatus> statuses);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT o FROM Order o WHERE o.id = :id")
+    java.util.Optional<Order> findByIdForUpdate(@org.springframework.data.repository.query.Param("id") Long id);
 }

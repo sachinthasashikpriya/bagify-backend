@@ -394,8 +394,12 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid order ID format");
         }
 
-        Order order = orderRepository.findById(orderId)
+        Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot process payment for a cancelled order");
+        }
 
         // 3. Process payment status
         if ("2".equals(receivedStatusCode)) {

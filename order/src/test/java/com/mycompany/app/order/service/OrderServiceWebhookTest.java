@@ -83,7 +83,7 @@ class OrderServiceWebhookTest {
         item.setItemStatus(OrderItem.ItemStatus.PENDING);
         order.getItems().add(item);
 
-        when(orderRepository.findById(45L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(45L)).thenReturn(Optional.of(order));
 
         orderService.processPaymentNotification(params);
 
@@ -123,7 +123,7 @@ class OrderServiceWebhookTest {
         order.setStatus(Order.OrderStatus.PENDING);
         order.setPaymentStatus("UNPAID");
 
-        when(orderRepository.findById(45L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByIdForUpdate(45L)).thenReturn(Optional.of(order));
 
         orderService.processPaymentNotification(params);
 
@@ -245,7 +245,7 @@ class OrderServiceWebhookTest {
         params.put("status_code", statusCode);
         params.put("md5sig", validSignature);
 
-        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+        when(orderRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             orderService.processPaymentNotification(params);
@@ -279,6 +279,40 @@ class OrderServiceWebhookTest {
 
         assertEquals(400, ex.getStatusCode().value());
         assertTrue(ex.getReason().contains("Invalid order ID format"));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void testProcessPaymentNotification_InactiveCancelledOrder() {
+        String orderId = "45";
+        String amount = "250.00";
+        String statusCode = "2";
+
+        String validSignature = PayHereSignatureGenerator.generateNotificationHash(
+                merchantId, orderId, amount, currency, statusCode, merchantSecret
+        );
+
+        Map<String, String> params = new HashMap<>();
+        params.put("merchant_id", merchantId);
+        params.put("order_id", orderId);
+        params.put("payhere_amount", amount);
+        params.put("payhere_currency", currency);
+        params.put("status_code", statusCode);
+        params.put("md5sig", validSignature);
+
+        Order order = new Order();
+        order.setId(45L);
+        order.setStatus(Order.OrderStatus.CANCELLED);
+        order.setPaymentStatus("UNPAID");
+
+        when(orderRepository.findByIdForUpdate(45L)).thenReturn(Optional.of(order));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            orderService.processPaymentNotification(params);
+        });
+
+        assertEquals(400, ex.getStatusCode().value());
+        assertTrue(ex.getReason().contains("Cannot process payment for a cancelled order"));
         verify(orderRepository, never()).save(any());
     }
 }
