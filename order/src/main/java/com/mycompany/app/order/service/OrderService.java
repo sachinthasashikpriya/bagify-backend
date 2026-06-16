@@ -11,6 +11,8 @@ import com.mycompany.app.order.repository.OrderRepository;
 import com.mycompany.app.order.dto.PayHereParamsResponse;
 import com.mycompany.app.order.dto.BuyerInfoResponse;
 import com.mycompany.app.order.util.PayHereSignatureGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,8 @@ import java.util.List;
 
 @Service
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     @Value("${payhere.merchant-id}")
     private String merchantId;
@@ -444,6 +448,7 @@ public class OrderService {
             orderRepository.save(order);
         } else {
             // Payment failed or declined (status_code < 0)
+            log.warn("Payment notification indicates failure for Order ID: {}. Status Code: {}", receivedOrderIdStr, receivedStatusCode);
             order.setPaymentStatus("FAILED");
             orderRepository.save(order);
         }
