@@ -20,6 +20,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -483,5 +485,146 @@ class OrderServiceWebhookTest {
 
         verify(orderRepository, times(1)).save(order);
         verifyNoInteractions(userClient);
+    }
+
+    @Test
+    void testProcessPaymentNotification_DuplicatePaidWebhook_SuccessStatus() {
+        String orderId = "45";
+        String amount = "250.00";
+        String statusCode = "2";
+        String paymentId = "pay_9999";
+
+        String validSignature = PayHereSignatureGenerator.generateNotificationHash(
+                merchantId, orderId, amount, currency, statusCode, merchantSecret
+        );
+
+        Map<String, String> params = new HashMap<>();
+        params.put("merchant_id", merchantId);
+        params.put("order_id", orderId);
+        params.put("payhere_amount", amount);
+        params.put("payhere_currency", currency);
+        params.put("status_code", statusCode);
+        params.put("md5sig", validSignature);
+        params.put("payment_id", paymentId);
+
+        Order order = new Order();
+        order.setId(45L);
+        order.setStatus(Order.OrderStatus.PROCESSING);
+        order.setPaymentStatus("PAID");
+
+        OrderItem item = new OrderItem();
+        item.setSellerId("10");
+        item.setPriceAtPurchase(25.0);
+        item.setQuantity(10);
+        item.setItemStatus(OrderItem.ItemStatus.PROCESSING);
+        order.getItems().add(item);
+
+        when(orderRepository.findByIdForUpdate(45L)).thenReturn(Optional.of(order));
+
+        orderService.processPaymentNotification(params);
+
+        // State remains unchanged
+        assertEquals("PAID", order.getPaymentStatus());
+        assertEquals(Order.OrderStatus.PROCESSING, order.getStatus());
+        assertEquals(OrderItem.ItemStatus.PROCESSING, item.getItemStatus());
+
+        // Bypassed completely: no save, no userClient sync
+        verify(orderRepository, never()).save(any());
+        verifyNoInteractions(userClient);
+    }
+
+    @Test
+    void testProcessPaymentNotification_DuplicatePaidWebhook_PendingStatus() {
+        String orderId = "45";
+        String amount = "250.00";
+        String statusCode = "0";
+
+        String validSignature = PayHereSignatureGenerator.generateNotificationHash(
+                merchantId, orderId, amount, currency, statusCode, merchantSecret
+        );
+
+        Map<String, String> params = new HashMap<>();
+        params.put("merchant_id", merchantId);
+        params.put("order_id", orderId);
+        params.put("payhere_amount", amount);
+        params.put("payhere_currency", currency);
+        params.put("status_code", statusCode);
+        params.put("md5sig", validSignature);
+
+        Order order = new Order();
+        order.setId(45L);
+        order.setStatus(Order.OrderStatus.PROCESSING);
+        order.setPaymentStatus("PAID");
+
+        OrderItem item = new OrderItem();
+        item.setSellerId("10");
+        item.setPriceAtPurchase(25.0);
+        item.setQuantity(10);
+        item.setItemStatus(OrderItem.ItemStatus.PROCESSING);
+        order.getItems().add(item);
+
+        when(orderRepository.findByIdForUpdate(45L)).thenReturn(Optional.of(order));
+
+        orderService.processPaymentNotification(params);
+
+        // State remains unchanged (not downgraded to PENDING)
+        assertEquals("PAID", order.getPaymentStatus());
+        assertEquals(Order.OrderStatus.PROCESSING, order.getStatus());
+        assertEquals(OrderItem.ItemStatus.PROCESSING, item.getItemStatus());
+
+        // Bypassed completely: no save, no userClient sync
+        verify(orderRepository, never()).save(any());
+        verifyNoInteractions(userClient);
+    }
+
+    @Test
+    void testProcessPaymentNotification_SellerStatsSyncFailure() {
+        String orderId = "45";
+        String amount = "250.00";
+        String statusCode = "2";
+        String paymentId = "pay_9999";
+
+        String validSignature = PayHereSignatureGenerator.generateNotificationHash(
+                merchantId, orderId, amount, currency, statusCode, merchantSecret
+        );
+
+        Map<String, String> params = new HashMap<>();
+        params.put("merchant_id", merchantId);
+        params.put("order_id", orderId);
+        params.put("payhere_amount", amount);
+        params.put("payhere_currency", currency);
+        params.put("status_code", statusCode);
+        params.put("md5sig", validSignature);
+        params.put("payment_id", paymentId);
+
+        Order order = new Order();
+        order.setId(45L);
+        order.setStatus(Order.OrderStatus.PENDING);
+        order.setPaymentStatus("UNPAID");
+
+        OrderItem item = new OrderItem();
+        item.setSellerId("10");
+        item.setPriceAtPurchase(25.0);
+        item.setQuantity(10);
+        item.setItemStatus(OrderItem.ItemStatus.PENDING);
+        order.getItems().add(item);
+
+        when(orderRepository.findByIdForUpdate(45L)).thenReturn(Optional.of(order));
+
+        // Mock userClient throwing an exception (e.g. RuntimeException) to simulate network drops or 500 error
+        doThrow(new RuntimeException("Downstream microservice error"))
+                .when(userClient).updateSellerStats(anyInt(), anyDouble(), anyInt());
+
+        // Call the service, which should not propagate the exception
+        assertDoesNotThrow(() -> orderService.processPaymentNotification(params));
+
+        // Core order state changes should NOT be rolled back
+        assertEquals("PAID", order.getPaymentStatus());
+        assertEquals("pay_9999", order.getPaymentId());
+        assertEquals(Order.OrderStatus.PROCESSING, order.getStatus());
+        assertEquals(OrderItem.ItemStatus.PROCESSING, item.getItemStatus());
+
+        verify(orderRepository, times(1)).save(order);
+        verify(userClient, times(1)).updateSellerStats(10, 250.0, 10);
     }
 }

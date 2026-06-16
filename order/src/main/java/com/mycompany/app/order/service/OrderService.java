@@ -405,10 +405,15 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot process payment for a cancelled order");
         }
 
-        // 3. Process payment status
+        // 3. Evaluate local state flag (isAlreadyPaid) before executing any status transitions or external service calls
+        boolean isAlreadyPaid = "PAID".equals(order.getPaymentStatus());
+        if (isAlreadyPaid) {
+            log.info("Duplicate webhook event: Order ID {} is already marked as PAID. Bypassing status transitions and external service calls.", orderId);
+            return;
+        }
+
         if ("2".equals(receivedStatusCode)) {
             // Payment success: transition order paymentStatus to PAID and overall status to PROCESSING
-            boolean isAlreadyPaid = "PAID".equals(order.getPaymentStatus());
             order.setPaymentStatus("PAID");
             order.setPaymentId(receivedPaymentId);
             
@@ -427,18 +432,16 @@ public class OrderService {
             }
             orderRepository.save(order);
 
-            // Update seller stats in user microservice if order wasn't paid already
-            if (!isAlreadyPaid) {
-                if (order.getItems() != null) {
-                    for (OrderItem item : order.getItems()) {
-                        try {
-                            Integer sellerId = Integer.parseInt(item.getSellerId());
-                            double itemRevenue = item.getPriceAtPurchase() * item.getQuantity();
-                            int itemQuantity = item.getQuantity();
-                            userClient.updateSellerStats(sellerId, itemRevenue, itemQuantity);
-                        } catch (Exception e) {
-                            System.err.println("Could not parse seller ID or call UserClient: " + e.getMessage());
-                        }
+            // Update seller stats in user microservice
+            if (order.getItems() != null) {
+                for (OrderItem item : order.getItems()) {
+                    try {
+                        Integer sellerId = Integer.parseInt(item.getSellerId());
+                        double itemRevenue = item.getPriceAtPurchase() * item.getQuantity();
+                        int itemQuantity = item.getQuantity();
+                        userClient.updateSellerStats(sellerId, itemRevenue, itemQuantity);
+                    } catch (Exception e) {
+                        log.error("Could not parse seller ID or call UserClient: {}", e.getMessage());
                     }
                 }
             }
