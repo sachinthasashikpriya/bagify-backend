@@ -97,6 +97,49 @@ class OrderServiceWebhookTest {
     }
 
     @Test
+    void testProcessPaymentNotification_Pending() {
+        String orderId = "45";
+        String amount = "250.00";
+        String statusCode = "0";
+
+        String validSignature = PayHereSignatureGenerator.generateNotificationHash(
+                merchantId, orderId, amount, currency, statusCode, merchantSecret
+        );
+
+        Map<String, String> params = new HashMap<>();
+        params.put("merchant_id", merchantId);
+        params.put("order_id", orderId);
+        params.put("payhere_amount", amount);
+        params.put("payhere_currency", currency);
+        params.put("status_code", statusCode);
+        params.put("md5sig", validSignature);
+
+        Order order = new Order();
+        order.setId(45L);
+        order.setStatus(Order.OrderStatus.PENDING);
+        order.setPaymentStatus("UNPAID");
+
+        OrderItem item = new OrderItem();
+        item.setSellerId("10");
+        item.setPriceAtPurchase(25.0);
+        item.setQuantity(10);
+        item.setItemStatus(OrderItem.ItemStatus.PENDING);
+        order.getItems().add(item);
+
+        when(orderRepository.findByIdForUpdate(45L)).thenReturn(Optional.of(order));
+
+        orderService.processPaymentNotification(params);
+
+        assertEquals("PENDING", order.getPaymentStatus());
+        assertEquals(Order.OrderStatus.PENDING, order.getStatus());
+        assertEquals(OrderItem.ItemStatus.PENDING, item.getItemStatus());
+
+        verify(orderRepository, times(1)).save(order);
+        verifyNoInteractions(userClient);
+    }
+
+
+    @Test
     void testProcessPaymentNotification_CaseInsensitiveSignature() {
         String orderId = "45";
         String amount = "250.00";
