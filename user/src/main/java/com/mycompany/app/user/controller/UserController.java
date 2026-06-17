@@ -156,4 +156,12 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/sellers/{id}/rating")
+    public ResponseEntity<Void> updateSellerRating(
+            @PathVariable Integer id,
+            @RequestParam float rating
+    ) {
+        userService.updateSellerRating(id, rating);
+        return ResponseEntity.ok().build();
+    }
 }

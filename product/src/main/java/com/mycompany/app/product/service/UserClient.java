@@ -39,4 +39,23 @@ public class UserClient {
             return Collections.emptyMap();
         }
     }
+
+    public void updateSellerRating(String sellerId, double rating) {
+        if (sellerId == null || !sellerId.matches("\\d+")) {
+            return;
+        }
+        try {
+            webClient.put()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/v1/users/sellers/" + sellerId + "/rating")
+                            .queryParam("rating", rating)
+                            .build())
+                    .retrieve()
+                    .toBodilessEntity()
+                    .retry(3)
+                    .block();
+        } catch (Exception e) {
+            System.err.println("Error updating seller rating in user service: " + e.getMessage());
+        }
+    }
 }

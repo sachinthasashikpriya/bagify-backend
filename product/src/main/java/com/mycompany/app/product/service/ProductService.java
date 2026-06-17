@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.context.event.EventListener;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,12 +19,14 @@ import java.util.Optional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final UserClient userClient;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, UserClient userClient) {
         this.productRepository = productRepository;
+        this.userClient = userClient;
     }
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void seedInitialData() {
         if (productRepository.count() == 0) {
@@ -139,6 +143,27 @@ public class ProductService {
             productRepository.saveAll(List.of(p1, p2, p3, p4, p5, p6));
             System.out.println("✅ Seeding completed. 6 products created!");
         }
+
+        try {
+            System.out.println("🔄 Recalculating and syncing product average ratings and seller ratings...");
+            List<Product> allProducts = productRepository.findAll();
+            for (Product p : allProducts) {
+                p.calculateAverageRating();
+            }
+            productRepository.saveAll(allProducts);
+
+            List<String> sellerIds = allProducts.stream()
+                    .map(Product::getSellerId)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
+                    .toList();
+            for (String sellerId : sellerIds) {
+                recalculateAndSyncSellerRating(sellerId);
+            }
+            System.out.println("✅ Product and seller ratings updated successfully in database!");
+        } catch (Exception e) {
+            System.err.println("⚠️ Warning: Could not sync ratings on startup: " + e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -165,7 +190,9 @@ public class ProductService {
     @Transactional
     public Product createProduct(Product product) {
         product.calculateAverageRating();
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        recalculateAndSyncSellerRating(product.getSellerId());
+        return productRepository.findById(saved.getId()).orElse(saved);
     }
 
     @Transactional
@@ -203,7 +230,9 @@ public class ProductService {
                     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own products");
                 }
             }
+            String sellerId = product.getSellerId();
             productRepository.delete(product);
+            recalculateAndSyncSellerRating(sellerId);
             return true;
         }).orElse(false);
     }
@@ -212,8 +241,36 @@ public class ProductService {
     public Optional<Product> addReview(Long productId, Review review) {
         return productRepository.findById(productId).map(product -> {
             product.addReview(review);
-            return productRepository.save(product);
+            Product saved = productRepository.save(product);
+            recalculateAndSyncSellerRating(product.getSellerId());
+            return saved;
         });
+    }
+
+    @Transactional
+    public void recalculateAndSyncSellerRating(String sellerId) {
+        if (sellerId == null) {
+            return;
+        }
+        List<Product> sellerProducts = productRepository.findBySellerId(sellerId);
+        double sellerRating = 0.0;
+        List<Product> reviewedProducts = sellerProducts.stream()
+                .filter(p -> p.getReviews() != null && !p.getReviews().isEmpty())
+                .toList();
+        if (!reviewedProducts.isEmpty()) {
+            double sumOfAverageRatings = 0.0;
+            for (Product p : reviewedProducts) {
+                sumOfAverageRatings += p.getAverageRating();
+            }
+            sellerRating = sumOfAverageRatings / reviewedProducts.size();
+            sellerRating = Math.round(sellerRating * 10.0) / 10.0;
+        }
+        
+        for (Product p : sellerProducts) {
+            p.setSellerRating(sellerRating);
+        }
+        productRepository.saveAll(sellerProducts);
+        userClient.updateSellerRating(sellerId, sellerRating);
     }
 
     @Transactional

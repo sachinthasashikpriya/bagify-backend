@@ -471,5 +471,13 @@ public class UserService {
         
         sellerRepository.save(seller);
     }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void updateSellerRating(Integer sellerId, float rating) {
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
+        seller.setRating(rating);
+        sellerRepository.save(seller);
+    }
 }
 
