@@ -23,7 +23,7 @@ spring:
         - id: product-service
           uri: lb://product
           predicates:
-            - Path=/api/v1/products/**, /api/v1/reviews/**
+            - Path=/api/v1/products/**, /api/v1/reviews/**, /api/v1/complaints/**
           # Block internal deduct-stock from external callers
           filters:
             - name: RequestHeaderSize
