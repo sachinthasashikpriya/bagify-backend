@@ -102,4 +102,31 @@ public class ComplaintController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseList);
     }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ComplaintResponse> updateComplaintStatus(
+            @PathVariable Long id,
+            @RequestParam String status,
+            Authentication authentication) {
+        
+        Integer sellerId = (Integer) authentication.getDetails();
+        if (sellerId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
+        Optional<Complaint> optionalComplaint = complaintRepository.findById(id);
+        if (optionalComplaint.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Complaint not found");
+        }
+
+        Complaint complaint = optionalComplaint.get();
+        if (!complaint.getSellerId().equals(String.valueOf(sellerId))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to update this complaint");
+        }
+
+        complaint.setStatus(status.toUpperCase());
+        Complaint updatedComplaint = complaintRepository.save(complaint);
+        return ResponseEntity.ok(ComplaintResponse.fromEntity(updatedComplaint));
+    }
 }
