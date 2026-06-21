@@ -1,0 +1,32 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: product
+  datasource:
+    password: sachintha2002
+    url: jdbc:postgresql://localhost:5432/BagifyProduct
+    username: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    fetch-registry: true
+    register-with-eureka: true
+    enabled: true
+
+# JWT Configuration
+jwt:
+  secret: bagify-super-secret-key-change-me-in-production-min-32-chars!!
+  expiration-ms: 900000
+  refresh-expiration-ms: 604800000
+
+

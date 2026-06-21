@@ -1,0 +1,66 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # ── Auth routes (public) ────────────────────────────────────────────────
+        - id: auth-service
+          uri: lb://user                     # Eureka service name
+          predicates:
+            - Path=/api/v1/auth/**
+
+        # ── User routes ─────────────────────────────────────────────────────────
+        - id: user-service
+          uri: lb://user
+          predicates:
+            - Path=/api/v1/users/**, /api/v1/cart/**, /api/v1/wishlist/**, /api/v1/admin/**
+
+        # ── Product routes ──────────────────────────────────────────────────────
+        - id: product-service
+          uri: lb://product
+          predicates:
+            - Path=/api/v1/products/**, /api/v1/reviews/**, /api/v1/complaints/**
+          # Block internal deduct-stock from external callers
+          filters:
+            - name: RequestHeaderSize
+
+        # ── Order routes ────────────────────────────────────────────────────────
+        - id: order-service
+          uri: lb://order
+          predicates:
+            - Path=/api/v1/orders/seller/stats, /api/v1/orders/**
+
+        # notification /internal/** routes are intentionally NOT listed here
+        # — they are unreachable from the internet (internal only)
+
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "http://localhost:5174"
+              - "http://localhost:3000"
+              - "http://localhost:4173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    fetch-registry: true
+    register-with-eureka: true
+    enabled: true

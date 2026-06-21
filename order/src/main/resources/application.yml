@@ -1,0 +1,40 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: order
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bagify_orders
+    username: postgres
+    password: sachintha2002
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    fetch-registry: true
+    register-with-eureka: true
+    enabled: true
+
+# JWT secret MUST match the user service secret exactly
+jwt:
+  secret: bagify-super-secret-key-change-me-in-production-min-32-chars!!
+  expiration-ms: 900000
+  refresh-expiration-ms: 604800000
+
+payhere:
+  merchant-id: ${PAYHERE_MERCHANT_ID:1235988}
+  merchant-secret: ${PAYHERE_MERCHANT_SECRET:MzI2OTAwOTA4NDM2NDMxOTMyOTIxMTAzNDY4ODExMTIzNDUxNzkwNg==}
+  sandbox: true
+  currency: LKR
+  notify-url: ${PAYHERE_NOTIFY_URL:https://deduct-divisibly-itinerary.ngrok-free.dev/api/v1/orders/payment/notify}
+

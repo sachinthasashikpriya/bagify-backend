@@ -14,7 +14,12 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>user</module>
+		<module>eureka-server</module>   <!-- startup order 1 -->
+		<module>user</module>            <!-- startup order 2 -->
+		<module>product</module>         <!-- startup order 3 -->
+		<module>notification</module>    <!-- startup order 4 -->
+		<module>order</module>           <!-- startup order 5 -->
+		<module>api-gateway</module>     <!-- startup order 6 (last) -->
 	</modules>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -36,6 +41,7 @@
 		<maven.compiler.release>17</maven.compiler.release>
 		<spring.boot.maven.plugin.version>3.2.1</spring.boot.maven.plugin.version>
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
+		<spring-cloud-netflix.version>4.1.0</spring-cloud-netflix.version>
 	</properties>
 
 	<dependencyManagement>
@@ -58,6 +64,13 @@
 	</dependencyManagement>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

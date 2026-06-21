@@ -1,4 +1,8 @@
 package com.mycompany.app.user.entity;
 
-public class Role {
+public enum Role {
+    BUYER,
+    SELLER,
+    ADMIN
+
 }
