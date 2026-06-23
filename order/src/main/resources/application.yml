@@ -33,7 +33,7 @@ jwt:
 
 payhere:
   merchant-id: ${PAYHERE_MERCHANT_ID:1235988}
-  merchant-secret: ${PAYHERE_MERCHANT_SECRET:MzI2OTAwOTA4NDM2NDMxOTMyOTIxMTAzNDY4ODExMTIzNDUxNzkwNg==}
+  merchant-secret: ${PAYHERE_MERCHANT_SECRET:NTU2OTUxNDI4MTAzMDQzODE2NTkyODc4Mzc5OTEwNzM2MTQxMDE=}
   sandbox: true
   currency: LKR
   notify-url: ${PAYHERE_NOTIFY_URL:https://deduct-divisibly-itinerary.ngrok-free.dev/api/v1/orders/payment/notify}
