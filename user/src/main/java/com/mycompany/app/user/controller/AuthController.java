@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,12 @@ public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
+    @Value("${jwt.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
+    @Value("${jwt.cookie.secure:true}")
+    private boolean cookieSecure;
+
     @PostMapping("/register")
     public ResponseEntity<UserProfileResponse> register(@RequestBody @Valid  RegisterRequest registerRequest) {
         User user = userService.register(registerRequest);
@@ -38,10 +45,10 @@ public class AuthController {
         
         ResponseCookie cookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/api/v1/auth")
                 .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -69,10 +76,10 @@ public class AuthController {
         
         ResponseCookie cookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/api/v1/auth")
                 .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -83,10 +90,10 @@ public class AuthController {
     public ResponseEntity<Void> logout(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .path("/api/v1/auth")
                 .maxAge(0)
-                .sameSite("Lax")
+                .sameSite(cookieSameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok().build();
