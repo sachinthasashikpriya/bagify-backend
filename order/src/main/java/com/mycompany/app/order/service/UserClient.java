@@ -35,6 +35,24 @@ public class UserClient {
     }
 
     /**
+     * Updates buyer statistics (totalSpent and totalOrders) in the user service.
+     */
+    public void updateBuyerStats(Integer buyerId, double spentDelta) {
+        try {
+            webClient.put()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/v1/users/buyers/{id}/stats")
+                            .queryParam("spentDelta", spentDelta)
+                            .build(buyerId))
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+        } catch (Exception e) {
+            System.err.println("Failed to update buyer stats for buyer ID " + buyerId + ": " + e.getMessage());
+        }
+    }
+
+    /**
      * Updates seller statistics (itemsSold and revenue) in the user service.
      */
     public void updateSellerStats(Integer sellerId, double revenueDelta, int itemsSoldDelta) {

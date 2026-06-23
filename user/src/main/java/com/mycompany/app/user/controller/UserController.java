@@ -146,6 +146,15 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/buyers/{id}/stats")
+    public ResponseEntity<Void> updateBuyerStats(
+            @PathVariable Integer id,
+            @RequestParam double spentDelta
+    ) {
+        userService.updateBuyerStats(id, spentDelta);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/sellers/{id}/stats")
     public ResponseEntity<Void> updateSellerStats(
             @PathVariable Integer id,

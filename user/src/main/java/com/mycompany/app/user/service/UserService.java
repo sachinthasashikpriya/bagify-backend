@@ -158,6 +158,21 @@ public class UserService {
                     seller.getRevenue()
             );
         }
+        if (user instanceof Buyer) {
+            Buyer buyer = (Buyer) user;
+            return new BuyerProfileResponse(
+                    buyer.getId(),
+                    buyer.getName(),
+                    buyer.getEmail(),
+                    buyer.getPhone(),
+                    buyer.getAddress(),
+                    buyer.getRole().name(),
+                    buyer.getProfileImageUrl(),
+                    buyer.getCreatedAt(),
+                    buyer.getTotalOrders(),
+                    buyer.getTotalSpent()
+            );
+        }
         return new UserProfileResponse(
                 user.getId(),
                 user.getName(),
@@ -452,6 +467,24 @@ public class UserService {
             result.put(s.getId(), s.getVerificationStatus() == Seller.VerificationStatus.APPROVED);
         }
         return result;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void updateBuyerStats(Integer buyerId, double spentDelta) {
+        Buyer buyer = buyerRepository.findById(buyerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Buyer not found"));
+        
+        if (buyer.getTotalOrders() == null) {
+            buyer.setTotalOrders(0);
+        }
+        if (buyer.getTotalSpent() == null) {
+            buyer.setTotalSpent(java.math.BigDecimal.ZERO);
+        }
+        
+        buyer.setTotalOrders(buyer.getTotalOrders() + 1);
+        buyer.setTotalSpent(buyer.getTotalSpent().add(java.math.BigDecimal.valueOf(spentDelta)));
+        
+        buyerRepository.save(buyer);
     }
 
     @org.springframework.transaction.annotation.Transactional

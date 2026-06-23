@@ -432,6 +432,13 @@ public class OrderService {
             }
             orderRepository.save(order);
 
+            // Update buyer stats in user microservice
+            try {
+                userClient.updateBuyerStats(order.getBuyerId(), order.getTotalAmount());
+            } catch (Exception e) {
+                log.error("Could not update buyer stats for buyer ID: {} error: {}", order.getBuyerId(), e.getMessage());
+            }
+
             // Update seller stats in user microservice
             if (order.getItems() != null) {
                 for (OrderItem item : order.getItems()) {
