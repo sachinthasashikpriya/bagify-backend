@@ -167,7 +167,7 @@ public class OrderController {
     /**
      * PUT /api/v1/orders/{orderId}/items/{itemId}/status
      * Updates a single item's fulfillment status — called by the owning SELLER.
-     * Seller can set: PENDING, PROCESSING, PACKED, SHIPPED (not DELIVERED).
+     * Seller can set: PENDING, PROCESSING, PACKED, SHIPPED.
      * After this call the parent order status is auto-recomputed.
      */
     @PutMapping("/{orderId}/items/{itemId}/status")
@@ -188,7 +188,7 @@ public class OrderController {
 
     /**
      * PUT /api/v1/orders/{orderId}/items/{itemId}/status/admin
-     * Admin override — can set any status including DELIVERED.
+     * Admin override — can set any status.
      */
     @PutMapping("/{orderId}/items/{itemId}/status/admin")
     @PreAuthorize("hasRole('ADMIN')")
@@ -202,7 +202,7 @@ public class OrderController {
 
     /**
      * GET /api/v1/orders/has-purchased
-     * Checks if a buyer has a DELIVERED order for a specific product.
+     * Checks if a buyer has a SHIPPED order for a specific product.
      * Internal endpoint for product service or frontend.
      */
     @GetMapping("/has-purchased")

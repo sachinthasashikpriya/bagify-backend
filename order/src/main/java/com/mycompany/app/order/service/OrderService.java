@@ -218,10 +218,6 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this item");
         }
 
-        // Sellers cannot set DELIVERED — that's reserved for admin/system
-        if (newStatus == OrderItem.ItemStatus.DELIVERED) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can mark items as DELIVERED");
-        }
 
         item.setItemStatus(newStatus);
         orderItemRepository.save(item);
@@ -232,7 +228,7 @@ public class OrderService {
     }
 
     /**
-     * Admin override — can update any item status including DELIVERED.
+     * Admin override — can update any item status.
      */
     @Transactional
     public OrderResponse updateItemStatusAdmin(Long orderId, Long itemId, OrderItem.ItemStatus newStatus) {
@@ -282,11 +278,11 @@ public class OrderService {
         return OrderResponse.fromEntity(saved);
     }
 
-    /** Checks if a buyer has a DELIVERED order item for a specific product. */
+    /** Checks if a buyer has a SHIPPED order item for a specific product. */
     @Transactional(readOnly = true)
     public boolean hasPurchased(Integer buyerId, Long productId) {
         return orderItemRepository.existsByOrderBuyerIdAndProductIdAndItemStatus(
-                buyerId, productId, OrderItem.ItemStatus.DELIVERED);
+                buyerId, productId, OrderItem.ItemStatus.SHIPPED);
     }
 
     /** Computes total revenue and items sold statistics for a seller. */
@@ -487,7 +483,7 @@ public class OrderService {
     public boolean hasActiveDeliveriesForSeller(Integer sellerId) {
         return orderItemRepository.existsActiveDeliveriesBySellerId(
                 String.valueOf(sellerId),
-                OrderItem.ItemStatus.DELIVERED,
+                OrderItem.ItemStatus.SHIPPED,
                 Order.OrderStatus.CANCELLED
         );
     }

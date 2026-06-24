@@ -14,8 +14,6 @@ import lombok.Setter;
  *
  * Lifecycle (seller controls):
  *   PENDING → PROCESSING → PACKED → SHIPPED
- * System/Admin controls:
- *   SHIPPED → DELIVERED
  */
 
 @Entity
@@ -63,6 +61,6 @@ public class OrderItem {
     private ItemStatus itemStatus = ItemStatus.PENDING;
 
     public enum ItemStatus {
-        PENDING, PROCESSING, PACKED, SHIPPED, DELIVERED
+        PENDING, PROCESSING, PACKED, SHIPPED
     }
 }
