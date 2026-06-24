@@ -1,6 +1,7 @@
 package com.mycompany.app.user.service;
 
 import com.mycompany.app.user.exception.ResourceNotFoundException;
+import com.mycompany.app.user.exception.InvalidCredentialsException;
 import com.mycompany.app.user.dto.*;
 import com.mycompany.app.user.entity.Buyer;
 import com.mycompany.app.user.entity.Role;
@@ -138,10 +139,10 @@ public class UserService {
 
     public AuthResponse authenticate(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         if (!user.isEnabled()) {
