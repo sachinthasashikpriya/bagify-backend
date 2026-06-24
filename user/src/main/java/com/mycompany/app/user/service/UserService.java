@@ -34,10 +34,17 @@ public class UserService {
     private final com.mycompany.app.user.client.OrderClient orderClient;
     private final SseService sseService;
 
+    @org.springframework.transaction.annotation.Transactional
     public User register(RegisterRequest registerRequest) {
 
         if(userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email address already in use");
+            User existingUser = userRepository.findByEmail(registerRequest.getEmail()).orElse(null);
+            if (existingUser != null && !existingUser.isEnabled()) {
+                userRepository.delete(existingUser);
+                userRepository.flush();
+            } else {
+                throw new RuntimeException("Email address already in use");
+            }
         }
 
         if (registerRequest.getPassword() == null || registerRequest.getConfirmPassword() == null
@@ -54,8 +61,10 @@ public class UserService {
             default -> throw new IllegalArgumentException("Invalid user type");
         };
 
-        if(role == Role.BUYER){
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
 
+        User userToSave;
+        if(role == Role.BUYER){
             Buyer buyer = new Buyer();
             buyer.setName(registerRequest.getName());
             buyer.setEmail(registerRequest.getEmail());
@@ -63,12 +72,11 @@ public class UserService {
             buyer.setPhone(registerRequest.getPhone());
             buyer.setAddress(registerRequest.getAddress());
             buyer.setRole(role);
-
-            return userRepository.save(buyer);
-        }
-
-        if(role == Role.SELLER){
-
+            buyer.setEnabled(false);
+            buyer.setVerificationCode(otp);
+            buyer.setVerificationCodeExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+            userToSave = buyer;
+        } else if(role == Role.SELLER){
             Seller seller = new Seller();
             seller.setName(registerRequest.getName());
             seller.setEmail(registerRequest.getEmail());
@@ -76,11 +84,54 @@ public class UserService {
             seller.setPhone(registerRequest.getPhone());
             seller.setAddress(registerRequest.getAddress());
             seller.setRole(role);
-
-            return userRepository.save(seller);
+            seller.setEnabled(false);
+            seller.setVerificationCode(otp);
+            seller.setVerificationCodeExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+            userToSave = seller;
+        } else {
+            throw new IllegalArgumentException("Invalid role");
         }
 
-        throw new IllegalArgumentException("Invalid role");
+        User savedUser = userRepository.save(userToSave);
+        System.out.println("🔑 Generated OTP for " + savedUser.getEmail() + " is: " + otp);
+
+        try {
+            emailService.sendVerificationOtpEmail(savedUser.getEmail(), otp);
+        } catch (Exception e) {
+            System.err.println("Failed to send OTP email: " + e.getMessage());
+            throw new RuntimeException("Failed to send verification email. Please check SMTP settings.");
+        }
+
+        return savedUser;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public AuthResponse verifyOtp(VerifyOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isEnabled()) {
+            throw new IllegalArgumentException("User account is already verified");
+        }
+
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(request.getCode())) {
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+
+        if (user.getVerificationCodeExpiry() == null || 
+            user.getVerificationCodeExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new IllegalArgumentException("Verification code has expired");
+        }
+
+        user.setEnabled(true);
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiry(null);
+        userRepository.save(user);
+
+        String token = jwtUtil.generateToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
+
+        return new AuthResponse(token, refreshToken, mapToProfileResponse(user));
     }
 
 
