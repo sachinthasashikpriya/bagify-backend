@@ -353,19 +353,16 @@ public class UserService {
 
     public void forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("No account registered with this email address"));
 
-        if (user != null) {
-            String token = java.util.UUID.randomUUID().toString();
-            user.setPasswordResetToken(token);
-            user.setPasswordResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
-            userRepository.save(user);
+        String token = java.util.UUID.randomUUID().toString();
+        user.setPasswordResetToken(token);
+        user.setPasswordResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
+        userRepository.save(user);
 
-            // In a real app, the base URL should be in properties
-            String resetLink = "http://localhost:5173/reset-password?token=" + token;
-            emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
-        }
-        // Silently succeed even if user not found to prevent enumeration
+        // In a real app, the base URL should be in properties
+        String resetLink = "http://localhost:5173/reset-password?token=" + token;
+        emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }
 
     public void resetPassword(ResetPasswordRequest request) {
