@@ -145,6 +145,9 @@ public class UserService {
         }
 
         if (!user.isEnabled()) {
+            if (user.getVerificationCode() != null) {
+                throw new IllegalArgumentException("User account is unverified. Please verify your email first.");
+            }
             throw new IllegalArgumentException("User account is disabled");
         }
 
@@ -169,6 +172,9 @@ public class UserService {
         }
 
         if (!user.isEnabled()) {
+            if (user.getVerificationCode() != null) {
+                throw new IllegalArgumentException("User account is unverified. Please verify your email first.");
+            }
             throw new IllegalArgumentException("User account is disabled");
         }
 
