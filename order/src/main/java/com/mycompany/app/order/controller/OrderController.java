@@ -4,6 +4,7 @@ import com.mycompany.app.order.dto.CheckoutRequest;
 import com.mycompany.app.order.dto.OrderResponse;
 import com.mycompany.app.order.dto.PayHereParamsResponse;
 import com.mycompany.app.order.dto.SellerStatsResponse;
+import com.mycompany.app.order.dto.AdminStatsResponse;
 import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.service.OrderService;
@@ -96,6 +97,16 @@ public class OrderController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
+    /**
+     * GET /api/v1/orders/admin/stats
+     * Returns the admin's stats: total platform revenue and admin earnings (tax).
+     */
+    @GetMapping("/admin/stats")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AdminStatsResponse> getAdminStats() {
+        return ResponseEntity.ok(orderService.getAdminStats());
     }
 
     /**

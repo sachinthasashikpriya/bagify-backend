@@ -4,6 +4,7 @@ import com.mycompany.app.order.dto.CheckoutRequest;
 import com.mycompany.app.order.dto.OrderResponse;
 import com.mycompany.app.order.dto.ProductDto;
 import com.mycompany.app.order.dto.SellerStatsResponse;
+import com.mycompany.app.order.dto.AdminStatsResponse;
 import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.repository.OrderItemRepository;
@@ -76,7 +77,7 @@ public class OrderService {
 
         // Phase 1 — Validate stock for all items before touching anything
         List<ProductDto> resolvedProducts = new ArrayList<>();
-        double totalAmount = 0;
+        double subtotal = 0;
 
         for (CheckoutRequest.CheckoutItemDto item : items) {
             ProductDto product = productClient.getProduct(item.getProductId());
@@ -91,8 +92,12 @@ public class OrderService {
             }
 
             resolvedProducts.add(product);
-            totalAmount += product.getPrice() * item.getQuantity();
+            subtotal += product.getPrice() * item.getQuantity();
         }
+
+        double tax = subtotal * 0.05;
+        double shipping = subtotal > 5000 ? 0.0 : subtotal * 0.04;
+        double totalAmount = subtotal + tax + shipping;
 
         // Phase 2 — Deduct stock (order service passes JWT to product service)
         for (int i = 0; i < items.size(); i++) {
@@ -482,5 +487,22 @@ public class OrderService {
                 OrderItem.ItemStatus.DELIVERED,
                 Order.OrderStatus.CANCELLED
         );
+    }
+
+    /** Computes total revenue and admin earnings (5% tax of paid orders subtotal). */
+    @Transactional(readOnly = true)
+    public AdminStatsResponse getAdminStats() {
+        List<Order> paidOrders = orderRepository.findAll().stream()
+                .filter(order -> "PAID".equals(order.getPaymentStatus()) && order.getStatus() != Order.OrderStatus.CANCELLED)
+                .toList();
+
+        double totalRevenue = paidOrders.stream()
+                .flatMap(order -> order.getItems().stream())
+                .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
+                .sum();
+
+        double adminEarnings = totalRevenue * 0.05;
+
+        return new AdminStatsResponse(totalRevenue, adminEarnings);
     }
 }
