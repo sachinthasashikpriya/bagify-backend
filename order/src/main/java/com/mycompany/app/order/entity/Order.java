@@ -41,6 +41,15 @@ public class Order {
     private Double totalAmount;
 
     @Column(nullable = false)
+    private Double subtotal = 0.0;
+
+    @Column(nullable = false)
+    private Double tax = 0.0;
+
+    @Column(nullable = false)
+    private Double shipping = 0.0;
+
+    @Column(nullable = false)
     private String shippingAddress;
 
     @Column(name = "payment_status")

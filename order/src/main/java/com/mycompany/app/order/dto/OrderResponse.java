@@ -17,6 +17,9 @@ public class OrderResponse {
     private Integer buyerId;
     private String status;
     private Double totalAmount;
+    private Double subtotal;
+    private Double tax;
+    private Double shipping;
     private String shippingAddress;
     private String paymentStatus;
     private String paymentId;
@@ -29,6 +32,9 @@ public class OrderResponse {
                 .buyerId(order.getBuyerId())
                 .status(order.getStatus().name())
                 .totalAmount(order.getTotalAmount())
+                .subtotal(order.getSubtotal())
+                .tax(order.getTax())
+                .shipping(order.getShipping())
                 .shippingAddress(order.getShippingAddress())
                 .paymentStatus(order.getPaymentStatus())
                 .paymentId(order.getPaymentId())

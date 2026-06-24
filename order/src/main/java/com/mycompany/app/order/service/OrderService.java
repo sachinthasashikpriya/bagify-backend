@@ -110,6 +110,9 @@ public class OrderService {
         order.setShippingAddress(request.getShippingAddress());
         order.setStatus(Order.OrderStatus.PENDING);
         order.setTotalAmount(totalAmount);
+        order.setSubtotal(subtotal);
+        order.setTax(tax);
+        order.setShipping(shipping);
 
         for (int i = 0; i < items.size(); i++) {
             CheckoutRequest.CheckoutItemDto cartItem = items.get(i);
@@ -489,7 +492,7 @@ public class OrderService {
         );
     }
 
-    /** Computes total revenue and admin earnings (5% tax of paid orders subtotal). */
+    /** Computes total revenue and admin earnings (using stored tax values from paid orders). */
     @Transactional(readOnly = true)
     public AdminStatsResponse getAdminStats() {
         List<Order> paidOrders = orderRepository.findAll().stream()
@@ -501,7 +504,9 @@ public class OrderService {
                 .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
                 .sum();
 
-        double adminEarnings = totalRevenue * 0.05;
+        double adminEarnings = paidOrders.stream()
+                .mapToDouble(Order::getTax)
+                .sum();
 
         return new AdminStatsResponse(totalRevenue, adminEarnings);
     }

@@ -2394,3 +2394,335 @@ Hibernate:
         order_items i1_0 
     where
         i1_0.order_id=?
+2026-06-24T10:48:30.722+05:30  INFO 57302 --- [order] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-06-24T10:48:32.269+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ⏰ Starting scheduled cleanup of abandoned unpaid orders created before 2026-06-24T10:33:32.268985202
+Hibernate: 
+    select
+        o1_0.id,
+        o1_0.buyer_id,
+        o1_0.created_at,
+        o1_0.payment_id,
+        o1_0.payment_status,
+        o1_0.shipping_address,
+        o1_0.status,
+        o1_0.total_amount 
+    from
+        orders o1_0 
+    where
+        o1_0.status=? 
+        and o1_0.payment_status=? 
+        and o1_0.created_at<?
+2026-06-24T10:48:32.282+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ✅ No abandoned orders found.
+2026-06-24T10:53:30.724+05:30  INFO 57302 --- [order] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-06-24T10:53:32.268+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ⏰ Starting scheduled cleanup of abandoned unpaid orders created before 2026-06-24T10:38:32.268821612
+Hibernate: 
+    select
+        o1_0.id,
+        o1_0.buyer_id,
+        o1_0.created_at,
+        o1_0.payment_id,
+        o1_0.payment_status,
+        o1_0.shipping_address,
+        o1_0.status,
+        o1_0.total_amount 
+    from
+        orders o1_0 
+    where
+        o1_0.status=? 
+        and o1_0.payment_status=? 
+        and o1_0.created_at<?
+2026-06-24T10:53:32.279+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ✅ No abandoned orders found.
+2026-06-24T10:56:23.539+05:30  INFO 57302 --- [order] [   File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 6 class path changes (0 additions, 0 deletions, 6 modifications)
+2026-06-24T10:56:23.549+05:30  INFO 57302 --- [order] [       Thread-1] o.s.c.n.e.s.EurekaServiceRegistry        : Unregistering application ORDER with eureka with status DOWN
+2026-06-24T10:56:23.550+05:30  INFO 57302 --- [order] [       Thread-1] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1782278783550, current=DOWN, previous=UP]
+2026-06-24T10:56:23.551+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083: registering service...
+2026-06-24T10:56:23.561+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - registration status: 204
+2026-06-24T10:56:23.613+05:30  INFO 57302 --- [order] [       Thread-1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-06-24T10:56:23.623+05:30  INFO 57302 --- [order] [       Thread-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-06-24T10:56:23.638+05:30  INFO 57302 --- [order] [       Thread-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-06-24T10:56:23.640+05:30  INFO 57302 --- [order] [       Thread-1] com.netflix.discovery.DiscoveryClient    : Shutting down DiscoveryClient ...
+2026-06-24T10:56:26.642+05:30  INFO 57302 --- [order] [       Thread-1] com.netflix.discovery.DiscoveryClient    : Unregistering ...
+2026-06-24T10:56:26.669+05:30  INFO 57302 --- [order] [       Thread-1] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - deregister  status: 200
+2026-06-24T10:56:26.670+05:30  INFO 57302 --- [order] [       Thread-1] com.netflix.discovery.DiscoveryClient    : Completed shut down of DiscoveryClient
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.1)
+
+2026-06-24T10:56:27.415+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : Starting OrderApplication using Java 17.0.19 with PID 57302 (/media/sachintha/New Volume/University materials/L3S1/Individual project/bagify-backend/order/target/classes started by sachintha in /media/sachintha/New Volume/University materials/L3S1/Individual project/bagify-backend/order)
+2026-06-24T10:56:27.417+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-06-24T10:56:29.809+05:30  INFO 57302 --- [order] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-24T10:56:29.955+05:30  INFO 57302 --- [order] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 144 ms. Found 2 JPA repository interfaces.
+2026-06-24T10:56:30.309+05:30  INFO 57302 --- [order] [  restartedMain] o.s.cloud.context.scope.GenericScope     : BeanFactory id=98e5a024-3bff-32a9-8eb9-e15264cb28cc
+2026-06-24T10:56:30.432+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig' of type [org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [lbRestClientPostProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-06-24T10:56:30.437+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'deferringLoadBalancerInterceptor' of type [org.springframework.cloud.client.loadbalancer.DeferringLoadBalancerInterceptor] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [lbRestClientPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:30.441+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-06-24T10:56:30.445+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactorDeferringLoadBalancerFilterConfig' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactorDeferringLoadBalancerFilterConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:30.448+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'reactorDeferringLoadBalancerExchangeFilterFunction' of type [org.springframework.cloud.client.loadbalancer.reactive.DeferringLoadBalancerExchangeFilterFunction] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:30.725+05:30  INFO 57302 --- [order] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8083 (http)
+2026-06-24T10:56:30.729+05:30  INFO 57302 --- [order] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-24T10:56:30.731+05:30  INFO 57302 --- [order] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-06-24T10:56:30.819+05:30  INFO 57302 --- [order] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-24T10:56:30.820+05:30  INFO 57302 --- [order] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3382 ms
+2026-06-24T10:56:31.167+05:30  INFO 57302 --- [order] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-24T10:56:31.232+05:30  INFO 57302 --- [order] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-24T10:56:31.271+05:30  INFO 57302 --- [order] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-24T10:56:31.286+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-06-24T10:56:31.397+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@61562e38
+2026-06-24T10:56:31.399+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-06-24T10:56:31.410+05:30  WARN 57302 --- [order] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-24T10:56:31.766+05:30  INFO 57302 --- [order] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-24T10:56:31.864+05:30  INFO 57302 --- [order] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-24T10:56:32.631+05:30  WARN 57302 --- [order] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-06-24T10:56:32.773+05:30  WARN 57302 --- [order] [  restartedMain] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: f5ed2499-933b-4be8-8cfa-d81077fe5f7b
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-06-24T10:56:33.331+05:30  INFO 57302 --- [order] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4dd10ed8, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1f052e83, org.springframework.security.web.context.SecurityContextHolderFilter@3d78398b, org.springframework.security.web.header.HeaderWriterFilter@2fab3eb3, org.springframework.security.web.authentication.logout.LogoutFilter@1478cfde, com.mycompany.app.order.config.JwtFilter@1005a126, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@117232a4, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@67dac89f, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@72b0f584, org.springframework.security.web.session.SessionManagementFilter@3e563660, org.springframework.security.web.access.ExceptionTranslationFilter@37f37aaa, org.springframework.security.web.access.intercept.AuthorizationFilter@25b084cb]
+2026-06-24T10:56:33.720+05:30  WARN 57302 --- [order] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
+2026-06-24T10:56:33.807+05:30  INFO 57302 --- [order] [  restartedMain] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestTemplate.
+2026-06-24T10:56:33.940+05:30  WARN 57302 --- [order] [  restartedMain] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-06-24T10:56:33.969+05:30  INFO 57302 --- [order] [  restartedMain] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-06-24T10:56:33.974+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-06-24T10:56:33.975+05:30  INFO 57302 --- [order] [  restartedMain] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-06-24T10:56:33.975+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-06-24T10:56:33.975+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-06-24T10:56:33.975+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-06-24T10:56:33.976+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-06-24T10:56:33.976+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-06-24T10:56:33.976+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-06-24T10:56:33.976+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-06-24T10:56:34.106+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-06-24T10:56:34.108+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2026-06-24T10:56:34.109+05:30  INFO 57302 --- [order] [  restartedMain] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-06-24T10:56:34.110+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1782278794110 with initial instances count: 4
+2026-06-24T10:56:34.123+05:30  INFO 57302 --- [order] [  restartedMain] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application ORDER with eureka with status UP
+2026-06-24T10:56:34.124+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1782278794124, current=UP, previous=STARTING]
+2026-06-24T10:56:34.125+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083: registering service...
+2026-06-24T10:56:34.132+05:30  INFO 57302 --- [order] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8083 (http) with context path ''
+2026-06-24T10:56:34.135+05:30  INFO 57302 --- [order] [  restartedMain] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8083
+2026-06-24T10:56:34.158+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - registration status: 204
+2026-06-24T10:56:34.174+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : Started OrderApplication in 7.152 seconds (process running for 811.498)
+2026-06-24T10:56:34.176+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ⏰ Starting scheduled cleanup of abandoned unpaid orders created before 2026-06-24T10:41:34.176162038
+2026-06-24T10:56:34.183+05:30  INFO 57302 --- [order] [  restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+Hibernate: 
+    select
+        o1_0.id,
+        o1_0.buyer_id,
+        o1_0.created_at,
+        o1_0.payment_id,
+        o1_0.payment_status,
+        o1_0.shipping,
+        o1_0.shipping_address,
+        o1_0.status,
+        o1_0.tax,
+        o1_0.total_amount 
+    from
+        orders o1_0 
+    where
+        o1_0.status=? 
+        and o1_0.payment_status=? 
+        and o1_0.created_at<?
+2026-06-24T10:56:34.190+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ✅ No abandoned orders found.
+2026-06-24T10:56:35.259+05:30  INFO 57302 --- [order] [   File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 9 class path changes (0 additions, 0 deletions, 9 modifications)
+2026-06-24T10:56:35.261+05:30  INFO 57302 --- [order] [       Thread-7] o.s.c.n.e.s.EurekaServiceRegistry        : Unregistering application ORDER with eureka with status DOWN
+2026-06-24T10:56:35.262+05:30  INFO 57302 --- [order] [       Thread-7] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1782278795262, current=DOWN, previous=UP]
+2026-06-24T10:56:35.262+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083: registering service...
+2026-06-24T10:56:35.268+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - registration status: 204
+2026-06-24T10:56:35.270+05:30  INFO 57302 --- [order] [       Thread-7] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-06-24T10:56:35.272+05:30  INFO 57302 --- [order] [       Thread-7] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Shutdown initiated...
+2026-06-24T10:56:35.279+05:30  INFO 57302 --- [order] [       Thread-7] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Shutdown completed.
+2026-06-24T10:56:35.280+05:30  INFO 57302 --- [order] [       Thread-7] com.netflix.discovery.DiscoveryClient    : Shutting down DiscoveryClient ...
+2026-06-24T10:56:38.281+05:30  INFO 57302 --- [order] [       Thread-7] com.netflix.discovery.DiscoveryClient    : Unregistering ...
+2026-06-24T10:56:38.289+05:30  INFO 57302 --- [order] [       Thread-7] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - deregister  status: 200
+2026-06-24T10:56:38.290+05:30  INFO 57302 --- [order] [       Thread-7] com.netflix.discovery.DiscoveryClient    : Completed shut down of DiscoveryClient
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.1)
+
+2026-06-24T10:56:38.647+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : Starting OrderApplication using Java 17.0.19 with PID 57302 (/media/sachintha/New Volume/University materials/L3S1/Individual project/bagify-backend/order/target/classes started by sachintha in /media/sachintha/New Volume/University materials/L3S1/Individual project/bagify-backend/order)
+2026-06-24T10:56:38.649+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-06-24T10:56:39.874+05:30  INFO 57302 --- [order] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-24T10:56:39.998+05:30  INFO 57302 --- [order] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 123 ms. Found 2 JPA repository interfaces.
+2026-06-24T10:56:40.458+05:30  INFO 57302 --- [order] [  restartedMain] o.s.cloud.context.scope.GenericScope     : BeanFactory id=98e5a024-3bff-32a9-8eb9-e15264cb28cc
+2026-06-24T10:56:40.661+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig' of type [org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [lbRestClientPostProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-06-24T10:56:40.666+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'deferringLoadBalancerInterceptor' of type [org.springframework.cloud.client.loadbalancer.DeferringLoadBalancerInterceptor] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [lbRestClientPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:40.674+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-06-24T10:56:40.678+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactorDeferringLoadBalancerFilterConfig' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactorDeferringLoadBalancerFilterConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:40.680+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'reactorDeferringLoadBalancerExchangeFilterFunction' of type [org.springframework.cloud.client.loadbalancer.reactive.DeferringLoadBalancerExchangeFilterFunction] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:41.151+05:30  INFO 57302 --- [order] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8083 (http)
+2026-06-24T10:56:41.154+05:30  INFO 57302 --- [order] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-24T10:56:41.155+05:30  INFO 57302 --- [order] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-06-24T10:56:41.232+05:30  INFO 57302 --- [order] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-24T10:56:41.233+05:30  INFO 57302 --- [order] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2573 ms
+2026-06-24T10:56:41.670+05:30  INFO 57302 --- [order] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-24T10:56:41.706+05:30  INFO 57302 --- [order] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-24T10:56:41.739+05:30  INFO 57302 --- [order] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-24T10:56:41.748+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Starting...
+2026-06-24T10:56:41.908+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-3 - Added connection org.postgresql.jdbc.PgConnection@4ffafda7
+2026-06-24T10:56:41.911+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Start completed.
+2026-06-24T10:56:41.927+05:30  WARN 57302 --- [order] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-24T10:56:42.223+05:30  INFO 57302 --- [order] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-24T10:56:42.337+05:30  INFO 57302 --- [order] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-24T10:56:42.928+05:30  WARN 57302 --- [order] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-06-24T10:56:43.059+05:30  WARN 57302 --- [order] [  restartedMain] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 32e1edd9-5e35-47c0-b193-280b39677ddd
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-06-24T10:56:43.449+05:30  INFO 57302 --- [order] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@6995e3c9, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@23076e7, org.springframework.security.web.context.SecurityContextHolderFilter@272ced37, org.springframework.security.web.header.HeaderWriterFilter@2575426f, org.springframework.security.web.authentication.logout.LogoutFilter@2f7886ca, com.mycompany.app.order.config.JwtFilter@1751ddd7, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@79494aa, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@87dc80d, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@5db710c4, org.springframework.security.web.session.SessionManagementFilter@22c8a5e0, org.springframework.security.web.access.ExceptionTranslationFilter@f40d9d, org.springframework.security.web.access.intercept.AuthorizationFilter@6ab1fa7b]
+2026-06-24T10:56:43.920+05:30  WARN 57302 --- [order] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
+2026-06-24T10:56:44.044+05:30  INFO 57302 --- [order] [  restartedMain] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestTemplate.
+2026-06-24T10:56:44.281+05:30  WARN 57302 --- [order] [  restartedMain] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-06-24T10:56:44.328+05:30  INFO 57302 --- [order] [  restartedMain] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-06-24T10:56:44.338+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-06-24T10:56:44.339+05:30  INFO 57302 --- [order] [  restartedMain] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-06-24T10:56:44.340+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-06-24T10:56:44.341+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-06-24T10:56:44.341+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-06-24T10:56:44.342+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-06-24T10:56:44.343+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-06-24T10:56:44.344+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-06-24T10:56:44.345+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-06-24T10:56:44.498+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-06-24T10:56:44.502+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2026-06-24T10:56:44.506+05:30  INFO 57302 --- [order] [  restartedMain] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-06-24T10:56:44.507+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1782278804507 with initial instances count: 4
+2026-06-24T10:56:44.520+05:30  INFO 57302 --- [order] [  restartedMain] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application ORDER with eureka with status UP
+2026-06-24T10:56:44.520+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1782278804520, current=UP, previous=STARTING]
+2026-06-24T10:56:44.521+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083: registering service...
+2026-06-24T10:56:44.543+05:30  INFO 57302 --- [order] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8083 (http) with context path ''
+2026-06-24T10:56:44.545+05:30  INFO 57302 --- [order] [  restartedMain] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8083
+2026-06-24T10:56:44.569+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - registration status: 204
+2026-06-24T10:56:44.607+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : Started OrderApplication in 6.129 seconds (process running for 821.931)
+2026-06-24T10:56:44.610+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ⏰ Starting scheduled cleanup of abandoned unpaid orders created before 2026-06-24T10:41:44.610152290
+2026-06-24T10:56:44.611+05:30  INFO 57302 --- [order] [  restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+Hibernate: 
+    select
+        o1_0.id,
+        o1_0.buyer_id,
+        o1_0.created_at,
+        o1_0.payment_id,
+        o1_0.payment_status,
+        o1_0.shipping,
+        o1_0.shipping_address,
+        o1_0.status,
+        o1_0.tax,
+        o1_0.total_amount 
+    from
+        orders o1_0 
+    where
+        o1_0.status=? 
+        and o1_0.payment_status=? 
+        and o1_0.created_at<?
+2026-06-24T10:56:44.622+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ✅ No abandoned orders found.
+2026-06-24T10:56:45.519+05:30  INFO 57302 --- [order] [   File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2026-06-24T10:56:45.522+05:30  INFO 57302 --- [order] [      Thread-13] o.s.c.n.e.s.EurekaServiceRegistry        : Unregistering application ORDER with eureka with status DOWN
+2026-06-24T10:56:45.522+05:30  INFO 57302 --- [order] [      Thread-13] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1782278805522, current=DOWN, previous=UP]
+2026-06-24T10:56:45.523+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083: registering service...
+2026-06-24T10:56:45.534+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - registration status: 204
+2026-06-24T10:56:45.540+05:30  INFO 57302 --- [order] [      Thread-13] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-06-24T10:56:45.542+05:30  INFO 57302 --- [order] [      Thread-13] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Shutdown initiated...
+2026-06-24T10:56:45.555+05:30  INFO 57302 --- [order] [      Thread-13] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Shutdown completed.
+2026-06-24T10:56:45.556+05:30  INFO 57302 --- [order] [      Thread-13] com.netflix.discovery.DiscoveryClient    : Shutting down DiscoveryClient ...
+2026-06-24T10:56:48.557+05:30  INFO 57302 --- [order] [      Thread-13] com.netflix.discovery.DiscoveryClient    : Unregistering ...
+2026-06-24T10:56:48.565+05:30  INFO 57302 --- [order] [      Thread-13] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - deregister  status: 200
+2026-06-24T10:56:48.566+05:30  INFO 57302 --- [order] [      Thread-13] com.netflix.discovery.DiscoveryClient    : Completed shut down of DiscoveryClient
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.1)
+
+2026-06-24T10:56:48.809+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : Starting OrderApplication using Java 17.0.19 with PID 57302 (/media/sachintha/New Volume/University materials/L3S1/Individual project/bagify-backend/order/target/classes started by sachintha in /media/sachintha/New Volume/University materials/L3S1/Individual project/bagify-backend/order)
+2026-06-24T10:56:48.810+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : No active profile set, falling back to 1 default profile: "default"
+2026-06-24T10:56:50.179+05:30  INFO 57302 --- [order] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-24T10:56:50.277+05:30  INFO 57302 --- [order] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 97 ms. Found 2 JPA repository interfaces.
+2026-06-24T10:56:50.819+05:30  INFO 57302 --- [order] [  restartedMain] o.s.cloud.context.scope.GenericScope     : BeanFactory id=98e5a024-3bff-32a9-8eb9-e15264cb28cc
+2026-06-24T10:56:50.936+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig' of type [org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [lbRestClientPostProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-06-24T10:56:50.961+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'deferringLoadBalancerInterceptor' of type [org.springframework.cloud.client.loadbalancer.DeferringLoadBalancerInterceptor] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [lbRestClientPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:50.969+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-06-24T10:56:50.973+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactorDeferringLoadBalancerFilterConfig' of type [org.springframework.cloud.client.loadbalancer.reactive.LoadBalancerBeanPostProcessorAutoConfiguration$ReactorDeferringLoadBalancerFilterConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:50.975+05:30  WARN 57302 --- [order] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'reactorDeferringLoadBalancerExchangeFilterFunction' of type [org.springframework.cloud.client.loadbalancer.reactive.DeferringLoadBalancerExchangeFilterFunction] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [loadBalancerWebClientBuilderBeanPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-06-24T10:56:51.292+05:30  INFO 57302 --- [order] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8083 (http)
+2026-06-24T10:56:51.294+05:30  INFO 57302 --- [order] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-24T10:56:51.295+05:30  INFO 57302 --- [order] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-06-24T10:56:51.339+05:30  INFO 57302 --- [order] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-06-24T10:56:51.339+05:30  INFO 57302 --- [order] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2519 ms
+2026-06-24T10:56:51.511+05:30  INFO 57302 --- [order] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-24T10:56:51.533+05:30  INFO 57302 --- [order] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-24T10:56:51.558+05:30  INFO 57302 --- [order] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-24T10:56:51.562+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Starting...
+2026-06-24T10:56:51.627+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-4 - Added connection org.postgresql.jdbc.PgConnection@303ae131
+2026-06-24T10:56:51.627+05:30  INFO 57302 --- [order] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Start completed.
+2026-06-24T10:56:51.635+05:30  WARN 57302 --- [order] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-24T10:56:51.857+05:30  INFO 57302 --- [order] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-06-24T10:56:51.948+05:30  INFO 57302 --- [order] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-24T10:56:52.865+05:30  WARN 57302 --- [order] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-06-24T10:56:52.969+05:30  WARN 57302 --- [order] [  restartedMain] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: c3a42827-7150-4f0b-a4ad-61da6e896111
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-06-24T10:56:53.361+05:30  INFO 57302 --- [order] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@46e1ccbe, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@3da39c1c, org.springframework.security.web.context.SecurityContextHolderFilter@5fdf64b9, org.springframework.security.web.header.HeaderWriterFilter@70e9caf6, org.springframework.security.web.authentication.logout.LogoutFilter@5375199f, com.mycompany.app.order.config.JwtFilter@2c4f5351, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@55ce6f1, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3bdc32d6, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@6cbd22a0, org.springframework.security.web.session.SessionManagementFilter@5103b70d, org.springframework.security.web.access.ExceptionTranslationFilter@2c1ed8f3, org.springframework.security.web.access.intercept.AuthorizationFilter@6b6cd815]
+2026-06-24T10:56:53.849+05:30  WARN 57302 --- [order] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
+2026-06-24T10:56:54.003+05:30  INFO 57302 --- [order] [  restartedMain] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestTemplate.
+2026-06-24T10:56:54.215+05:30  WARN 57302 --- [order] [  restartedMain] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-06-24T10:56:54.269+05:30  INFO 57302 --- [order] [  restartedMain] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-06-24T10:56:54.277+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-06-24T10:56:54.278+05:30  INFO 57302 --- [order] [  restartedMain] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-06-24T10:56:54.279+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-06-24T10:56:54.280+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-06-24T10:56:54.280+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-06-24T10:56:54.286+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-06-24T10:56:54.287+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-06-24T10:56:54.287+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-06-24T10:56:54.288+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-06-24T10:56:54.395+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-06-24T10:56:54.397+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2026-06-24T10:56:54.399+05:30  INFO 57302 --- [order] [  restartedMain] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-06-24T10:56:54.400+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1782278814400 with initial instances count: 4
+2026-06-24T10:56:54.416+05:30  INFO 57302 --- [order] [  restartedMain] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application ORDER with eureka with status UP
+2026-06-24T10:56:54.417+05:30  INFO 57302 --- [order] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1782278814417, current=UP, previous=STARTING]
+2026-06-24T10:56:54.418+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083: registering service...
+2026-06-24T10:56:54.428+05:30  INFO 57302 --- [order] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8083 (http) with context path ''
+2026-06-24T10:56:54.430+05:30  INFO 57302 --- [order] [  restartedMain] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8083
+2026-06-24T10:56:54.456+05:30  INFO 57302 --- [order] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_ORDER/10.2.132.220:order:8083 - registration status: 204
+2026-06-24T10:56:54.458+05:30  INFO 57302 --- [order] [  restartedMain] c.mycompany.app.order.OrderApplication   : Started OrderApplication in 5.761 seconds (process running for 831.783)
+2026-06-24T10:56:54.460+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ⏰ Starting scheduled cleanup of abandoned unpaid orders created before 2026-06-24T10:41:54.459927881
+2026-06-24T10:56:54.464+05:30  INFO 57302 --- [order] [  restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+Hibernate: 
+    select
+        o1_0.id,
+        o1_0.buyer_id,
+        o1_0.created_at,
+        o1_0.payment_id,
+        o1_0.payment_status,
+        o1_0.shipping,
+        o1_0.shipping_address,
+        o1_0.status,
+        o1_0.tax,
+        o1_0.total_amount 
+    from
+        orders o1_0 
+    where
+        o1_0.status=? 
+        and o1_0.payment_status=? 
+        and o1_0.created_at<?
+2026-06-24T10:56:54.481+05:30  INFO 57302 --- [order] [   scheduling-1] c.m.a.o.scheduler.OrderCleanupScheduler  : ✅ No abandoned orders found.
