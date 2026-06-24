@@ -7,6 +7,7 @@ import com.mycompany.app.user.dto.RegisterRequest;
 import com.mycompany.app.user.dto.ResetPasswordRequest;
 import com.mycompany.app.user.dto.TokenRefreshRequest;
 import com.mycompany.app.user.dto.UserProfileResponse;
+import com.mycompany.app.user.dto.VerifyOtpRequest;
 import com.mycompany.app.user.entity.User;
 import com.mycompany.app.user.service.UserService;
 import com.mycompany.app.user.util.JwtUtil;
@@ -38,6 +39,22 @@ public class AuthController {
     public ResponseEntity<UserProfileResponse> register(@RequestBody @Valid  RegisterRequest registerRequest) {
         User user = userService.register(registerRequest);
         return ResponseEntity.ok(userService.mapToProfileResponse(user));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<AuthResponse> verifyOtp(@RequestBody @Valid VerifyOtpRequest verifyOtpRequest, HttpServletResponse response) {
+        AuthResponse authResponse = userService.verifyOtp(verifyOtpRequest);
+        
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", authResponse.getRefreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/api/v1/auth")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(new AuthResponse(authResponse.getToken(), null, authResponse.getUser()));
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {

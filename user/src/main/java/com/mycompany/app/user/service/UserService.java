@@ -34,10 +34,17 @@ public class UserService {
     private final com.mycompany.app.user.client.OrderClient orderClient;
     private final SseService sseService;
 
+    @org.springframework.transaction.annotation.Transactional
     public User register(RegisterRequest registerRequest) {
 
         if(userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email address already in use");
+            User existingUser = userRepository.findByEmail(registerRequest.getEmail()).orElse(null);
+            if (existingUser != null && !existingUser.isEnabled()) {
+                userRepository.delete(existingUser);
+                userRepository.flush();
+            } else {
+                throw new RuntimeException("Email address already in use");
+            }
         }
 
         if (registerRequest.getPassword() == null || registerRequest.getConfirmPassword() == null
@@ -54,8 +61,10 @@ public class UserService {
             default -> throw new IllegalArgumentException("Invalid user type");
         };
 
-        if(role == Role.BUYER){
+        String otp = String.format("%06d", new java.util.Random().nextInt(1000000));
 
+        User userToSave;
+        if(role == Role.BUYER){
             Buyer buyer = new Buyer();
             buyer.setName(registerRequest.getName());
             buyer.setEmail(registerRequest.getEmail());
@@ -63,12 +72,11 @@ public class UserService {
             buyer.setPhone(registerRequest.getPhone());
             buyer.setAddress(registerRequest.getAddress());
             buyer.setRole(role);
-
-            return userRepository.save(buyer);
-        }
-
-        if(role == Role.SELLER){
-
+            buyer.setEnabled(false);
+            buyer.setVerificationCode(otp);
+            buyer.setVerificationCodeExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+            userToSave = buyer;
+        } else if(role == Role.SELLER){
             Seller seller = new Seller();
             seller.setName(registerRequest.getName());
             seller.setEmail(registerRequest.getEmail());
@@ -76,11 +84,54 @@ public class UserService {
             seller.setPhone(registerRequest.getPhone());
             seller.setAddress(registerRequest.getAddress());
             seller.setRole(role);
-
-            return userRepository.save(seller);
+            seller.setEnabled(false);
+            seller.setVerificationCode(otp);
+            seller.setVerificationCodeExpiry(java.time.LocalDateTime.now().plusMinutes(10));
+            userToSave = seller;
+        } else {
+            throw new IllegalArgumentException("Invalid role");
         }
 
-        throw new IllegalArgumentException("Invalid role");
+        User savedUser = userRepository.save(userToSave);
+        System.out.println("🔑 Generated OTP for " + savedUser.getEmail() + " is: " + otp);
+
+        try {
+            emailService.sendVerificationOtpEmail(savedUser.getEmail(), otp);
+        } catch (Exception e) {
+            System.err.println("Failed to send OTP email: " + e.getMessage());
+            throw new RuntimeException("Failed to send verification email. Please check SMTP settings.");
+        }
+
+        return savedUser;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public AuthResponse verifyOtp(VerifyOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isEnabled()) {
+            throw new IllegalArgumentException("User account is already verified");
+        }
+
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(request.getCode())) {
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+
+        if (user.getVerificationCodeExpiry() == null || 
+            user.getVerificationCodeExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new IllegalArgumentException("Verification code has expired");
+        }
+
+        user.setEnabled(true);
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiry(null);
+        userRepository.save(user);
+
+        String token = jwtUtil.generateToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
+
+        return new AuthResponse(token, refreshToken, mapToProfileResponse(user));
     }
 
 
@@ -94,6 +145,9 @@ public class UserService {
         }
 
         if (!user.isEnabled()) {
+            if (user.getVerificationCode() != null) {
+                throw new IllegalArgumentException("User account is unverified. Please verify your email first.");
+            }
             throw new IllegalArgumentException("User account is disabled");
         }
 
@@ -118,6 +172,9 @@ public class UserService {
         }
 
         if (!user.isEnabled()) {
+            if (user.getVerificationCode() != null) {
+                throw new IllegalArgumentException("User account is unverified. Please verify your email first.");
+            }
             throw new IllegalArgumentException("User account is disabled");
         }
 
@@ -156,6 +213,21 @@ public class UserService {
                     seller.getReviewedAt(),
                     seller.getItemsSold(),
                     seller.getRevenue()
+            );
+        }
+        if (user instanceof Buyer) {
+            Buyer buyer = (Buyer) user;
+            return new BuyerProfileResponse(
+                    buyer.getId(),
+                    buyer.getName(),
+                    buyer.getEmail(),
+                    buyer.getPhone(),
+                    buyer.getAddress(),
+                    buyer.getRole().name(),
+                    buyer.getProfileImageUrl(),
+                    buyer.getCreatedAt(),
+                    buyer.getTotalOrders(),
+                    buyer.getTotalSpent()
             );
         }
         return new UserProfileResponse(
@@ -287,19 +359,16 @@ public class UserService {
 
     public void forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("No account registered with this email address"));
 
-        if (user != null) {
-            String token = java.util.UUID.randomUUID().toString();
-            user.setPasswordResetToken(token);
-            user.setPasswordResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
-            userRepository.save(user);
+        String token = java.util.UUID.randomUUID().toString();
+        user.setPasswordResetToken(token);
+        user.setPasswordResetTokenExpiry(java.time.LocalDateTime.now().plusMinutes(15));
+        userRepository.save(user);
 
-            // In a real app, the base URL should be in properties
-            String resetLink = "http://localhost:5173/reset-password?token=" + token;
-            emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
-        }
-        // Silently succeed even if user not found to prevent enumeration
+        // In a real app, the base URL should be in properties
+        String resetLink = "http://localhost:5173/reset-password?token=" + token;
+        emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }
 
     public void resetPassword(ResetPasswordRequest request) {
@@ -452,6 +521,24 @@ public class UserService {
             result.put(s.getId(), s.getVerificationStatus() == Seller.VerificationStatus.APPROVED);
         }
         return result;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void updateBuyerStats(Integer buyerId, double spentDelta) {
+        Buyer buyer = buyerRepository.findById(buyerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Buyer not found"));
+        
+        if (buyer.getTotalOrders() == null) {
+            buyer.setTotalOrders(0);
+        }
+        if (buyer.getTotalSpent() == null) {
+            buyer.setTotalSpent(java.math.BigDecimal.ZERO);
+        }
+        
+        buyer.setTotalOrders(buyer.getTotalOrders() + 1);
+        buyer.setTotalSpent(buyer.getTotalSpent().add(java.math.BigDecimal.valueOf(spentDelta)));
+        
+        buyerRepository.save(buyer);
     }
 
     @org.springframework.transaction.annotation.Transactional

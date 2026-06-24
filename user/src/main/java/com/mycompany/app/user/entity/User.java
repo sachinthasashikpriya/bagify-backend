@@ -51,6 +51,14 @@ public class User {
 
     @Column
     @JsonIgnore
+    private String verificationCode;
+
+    @Column
+    @JsonIgnore
+    private LocalDateTime verificationCodeExpiry;
+
+    @Column
+    @JsonIgnore
     private String passwordResetToken;
 
     @Column
