@@ -34,4 +34,12 @@ public class GlobalExceptionHandler {
         response.put("message", "Cannot delete account due to ongoing transactions or active references.");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("error", "Unauthorized");
+        response.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
 }

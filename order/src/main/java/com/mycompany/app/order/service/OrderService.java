@@ -4,6 +4,7 @@ import com.mycompany.app.order.dto.CheckoutRequest;
 import com.mycompany.app.order.dto.OrderResponse;
 import com.mycompany.app.order.dto.ProductDto;
 import com.mycompany.app.order.dto.SellerStatsResponse;
+import com.mycompany.app.order.dto.AdminStatsResponse;
 import com.mycompany.app.order.entity.Order;
 import com.mycompany.app.order.entity.OrderItem;
 import com.mycompany.app.order.repository.OrderItemRepository;
@@ -76,7 +77,7 @@ public class OrderService {
 
         // Phase 1 — Validate stock for all items before touching anything
         List<ProductDto> resolvedProducts = new ArrayList<>();
-        double totalAmount = 0;
+        double subtotal = 0;
 
         for (CheckoutRequest.CheckoutItemDto item : items) {
             ProductDto product = productClient.getProduct(item.getProductId());
@@ -91,8 +92,12 @@ public class OrderService {
             }
 
             resolvedProducts.add(product);
-            totalAmount += product.getPrice() * item.getQuantity();
+            subtotal += product.getPrice() * item.getQuantity();
         }
+
+        double tax = subtotal * 0.05;
+        double shipping = subtotal > 5000 ? 0.0 : subtotal * 0.04;
+        double totalAmount = subtotal + tax + shipping;
 
         // Phase 2 — Deduct stock (order service passes JWT to product service)
         for (int i = 0; i < items.size(); i++) {
@@ -105,6 +110,9 @@ public class OrderService {
         order.setShippingAddress(request.getShippingAddress());
         order.setStatus(Order.OrderStatus.PENDING);
         order.setTotalAmount(totalAmount);
+        order.setSubtotal(subtotal);
+        order.setTax(tax);
+        order.setShipping(shipping);
 
         for (int i = 0; i < items.size(); i++) {
             CheckoutRequest.CheckoutItemDto cartItem = items.get(i);
@@ -210,10 +218,6 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this item");
         }
 
-        // Sellers cannot set DELIVERED — that's reserved for admin/system
-        if (newStatus == OrderItem.ItemStatus.DELIVERED) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can mark items as DELIVERED");
-        }
 
         item.setItemStatus(newStatus);
         orderItemRepository.save(item);
@@ -224,7 +228,7 @@ public class OrderService {
     }
 
     /**
-     * Admin override — can update any item status including DELIVERED.
+     * Admin override — can update any item status.
      */
     @Transactional
     public OrderResponse updateItemStatusAdmin(Long orderId, Long itemId, OrderItem.ItemStatus newStatus) {
@@ -274,11 +278,11 @@ public class OrderService {
         return OrderResponse.fromEntity(saved);
     }
 
-    /** Checks if a buyer has a DELIVERED order item for a specific product. */
+    /** Checks if a buyer has a SHIPPED order item for a specific product. */
     @Transactional(readOnly = true)
     public boolean hasPurchased(Integer buyerId, Long productId) {
         return orderItemRepository.existsByOrderBuyerIdAndProductIdAndItemStatus(
-                buyerId, productId, OrderItem.ItemStatus.DELIVERED);
+                buyerId, productId, OrderItem.ItemStatus.SHIPPED);
     }
 
     /** Computes total revenue and items sold statistics for a seller. */
@@ -432,6 +436,13 @@ public class OrderService {
             }
             orderRepository.save(order);
 
+            // Update buyer stats in user microservice
+            try {
+                userClient.updateBuyerStats(order.getBuyerId(), order.getTotalAmount());
+            } catch (Exception e) {
+                log.error("Could not update buyer stats for buyer ID: {} error: {}", order.getBuyerId(), e.getMessage());
+            }
+
             // Update seller stats in user microservice
             if (order.getItems() != null) {
                 for (OrderItem item : order.getItems()) {
@@ -472,8 +483,27 @@ public class OrderService {
     public boolean hasActiveDeliveriesForSeller(Integer sellerId) {
         return orderItemRepository.existsActiveDeliveriesBySellerId(
                 String.valueOf(sellerId),
-                OrderItem.ItemStatus.DELIVERED,
+                OrderItem.ItemStatus.SHIPPED,
                 Order.OrderStatus.CANCELLED
         );
+    }
+
+    /** Computes total revenue and admin earnings (using stored tax values from paid orders). */
+    @Transactional(readOnly = true)
+    public AdminStatsResponse getAdminStats() {
+        List<Order> paidOrders = orderRepository.findAll().stream()
+                .filter(order -> "PAID".equals(order.getPaymentStatus()) && order.getStatus() != Order.OrderStatus.CANCELLED)
+                .toList();
+
+        double totalRevenue = paidOrders.stream()
+                .flatMap(order -> order.getItems().stream())
+                .mapToDouble(item -> item.getPriceAtPurchase() * item.getQuantity())
+                .sum();
+
+        double adminEarnings = paidOrders.stream()
+                .mapToDouble(Order::getTax)
+                .sum();
+
+        return new AdminStatsResponse(totalRevenue, adminEarnings);
     }
 }

@@ -78,10 +78,10 @@ public class ReviewController {
 
         String bearerToken = request.getHeader("Authorization");
 
-        // 1. Verify buyer has a DELIVERED order containing this product
+        // 1. Verify buyer has a SHIPPED order containing this product
         boolean hasPurchased = orderClient.hasPurchased(productId, bearerToken);
         if (!hasPurchased) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only review products you have purchased and received.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only review products you have purchased and had shipped.");
         }
 
         // 2. Reject if buyer already reviewed this product

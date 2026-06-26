@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/login", 
                                 "/api/v1/auth/register",
+                                "/api/v1/auth/verify-otp",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/logout",
                                 "/api/v1/auth/forgot-password",
@@ -48,6 +49,7 @@ public class SecurityConfig {
                                 "/api/v1/users/sellers/batch-verified",
                                 "/api/v1/users/sellers/*/stats",
                                 "/api/v1/users/sellers/*/rating",
+                                "/api/v1/users/buyers/*/stats",
                                 "/error"
                         ).permitAll() // ✅ public
                         .anyRequest().authenticated()                                   // ✅ everything else needs JWT
